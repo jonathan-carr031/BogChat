@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AuthentikSharp" Version="1.0.3" />
+        <PackageReference Include="Avalonia" Version="12.0.1"/>
+        <PackageReference Include="Avalonia.Desktop" Version="12.0.1"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.1"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.1"/>
+        <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1">
+            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+            <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+        <PackageReference Include="LiveKit.AspNetCore.ServerSdk" Version="2.1.5" />
+        <PackageReference Include="Livekit.Rtc.Dotnet" Version="0.1.2" />
+        <PackageReference Include="Livekit.Server.Sdk.Dotnet" Version="1.2.1" />
+        <PackageReference Include="NAudio" Version="2.3.0" />
+        <PackageReference Include="ReactiveUI" Version="23.2.27" />
+    </ItemGroup>
+</Project>

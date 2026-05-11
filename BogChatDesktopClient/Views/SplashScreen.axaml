@@ -1,0 +1,28 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:BogChatDesktopClient.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="150"
+        Width="200"
+        Height="150"
+        x:Class="BogChatDesktopClient.Views.SplashScreen"
+        x:DataType="viewModels:SplashScreenViewModel"
+        WindowDecorations="None"
+        WindowStartupLocation="CenterScreen"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        TransparencyBackgroundFallback="Transparent"
+        Title="SplashScreen">
+
+    <Border Background="#333333" CornerRadius="10">
+        <StackPanel VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+            <Image Source=""></Image>
+            <TextBlock Text="{Binding StartupMessage}"
+                       Foreground="#41AB5D">
+            </TextBlock>
+        </StackPanel>
+    </Border>
+
+</Window>

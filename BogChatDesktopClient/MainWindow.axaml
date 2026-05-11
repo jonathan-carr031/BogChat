@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="BogChatDesktopClient.MainWindow"
+        Loaded="OnLoaded"
+        Title="BogChatDesktopClient">
+    <DockPanel>
+        <TextBlock Text="WELCOME TO AVALONIA!"></TextBlock>
+        
+        <Button Click="JoinRoom">Join The Bog</Button>
+        <Button Click="LeaveRoom">Leave The Bog</Button>
+
+
+        <Button Click="Mute">Mute</Button>
+        <Button Click="UnMute">UnMute</Button>
+        <Button Click="RecordMic">RecordMic</Button>
+        <Button Click="StopRecording">StopRecording</Button>
+    </DockPanel>
+</Window>
