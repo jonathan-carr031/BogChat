@@ -7,7 +7,7 @@ namespace BogChatDesktopClient.Services;
 
 public class ApplicationAudioCapture
 {
-    delegate void AudioCallback(IntPtr data, int length);
+    static MemoryStream ms;
 
     [DllImport("ApplicationLoopback.dll", CallingConvention = CallingConvention.StdCall)]
     static extern void SetAudioCallback(AudioCallback callback);
@@ -27,11 +27,8 @@ public class ApplicationAudioCapture
 
         ms.Write(buffer, 0, buffer.Length); // Writing PCM to temp stream to converting it to WAV later.
 
-        Console.WriteLine($"Audio bytes are receiving from specifed process: {length} byte");
+        Console.WriteLine($"Audio bytes are receiving from specified process: {length} byte");
     }
-
-
-    static MemoryStream ms;
 
     public void CaptureApplicationAudio(uint processId)
     {
@@ -56,7 +53,7 @@ public class ApplicationAudioCapture
 
     static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
     {
-        Console.WriteLine("Audio capture from specifed process is started, press CTRL + C to stop.");
+        Console.WriteLine("Audio capture from specified process is started, press CTRL + C to stop.");
 
         StopCaptureAsync();
 
@@ -68,20 +65,18 @@ public class ApplicationAudioCapture
         ms.Dispose();
     }
 
+    delegate void AudioCallback(IntPtr data, int length);
+
     public class WavConverter
     {
         public static void WriteWavFile(MemoryStream pcmStream, string outputPath, int sampleRate, short channels,
             short bitDepth)
         {
-            // PCM verisini al
             byte[] pcmData = pcmStream.ToArray();
 
             using (FileStream fs = new FileStream(outputPath, FileMode.Create))
             {
-                // WAV dosyasının başlık kısmı
                 WriteWavHeader(fs, pcmData.Length, sampleRate, channels, bitDepth);
-
-                // PCM verisini yaz
                 fs.Write(pcmData, 0, pcmData.Length);
             }
         }

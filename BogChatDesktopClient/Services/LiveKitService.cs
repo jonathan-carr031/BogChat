@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Input.Raw;
-using Livekit.Server.Sdk.Dotnet;
 using LiveKit.Rtc;
-using NAudio.Wave;
+using Livekit.Server.Sdk.Dotnet;
 using Room = LiveKit.Rtc.Room;
 
 namespace BogChatDesktopClient.Services;
@@ -24,11 +21,11 @@ public class LiveKitService
 
     private readonly AudioHandler _audioHandler;
 
-    private Room _room;
-    private LocalTrackPublication _publication;
-    private AudioSource _microphoneAudioSource;
-
     private bool _isMuted;
+    private AudioSource _microphoneAudioSource;
+    private LocalTrackPublication _publication;
+
+    private Room _room;
 
     public LiveKitService()
     {
@@ -38,7 +35,7 @@ public class LiveKitService
     private void OnDataReceived(byte[] buffer, int bytes)
     {
         if (_isMuted) return;
-        
+
         var audioFrame = new AudioFrame(buffer, _audioHandler.WaveIn.WaveFormat.SampleRate,
             _audioHandler.WaveIn.WaveFormat.Channels, 1440);
         _ = _microphoneAudioSource.CaptureFrameAsync(audioFrame);
@@ -55,7 +52,7 @@ public class LiveKitService
         return token.ToJwt();
     }
 
-    public async Task JoinRoom(string roomName)
+    public async Task<Room> JoinRoom(string roomName)
     {
         var accessToken = GetAccessToken(roomName);
 
@@ -65,19 +62,7 @@ public class LiveKitService
 
         Console.WriteLine($"Connected to {_room.Name}");
 
-        _room.TrackSubscribed += async (sender, e) =>
-        {
-            Console.WriteLine($"Subscribed to track: {e.Track.Sid}");
-            if (e.Track is RemoteVideoTrack videoTrack)
-            {
-                using var videoStream = new VideoStream(videoTrack);
-                await foreach (var frame in videoStream.WithCancellation(CancellationToken.None))
-                {
-                    // Process video frame
-                    Console.WriteLine($"Frame: {frame.Frame.Width}x{frame.Frame.Height}");
-                }
-            }
-        };
+        _room.TrackSubscribed += async (sender, e) => { };
 
         _room.ParticipantConnected += (sender, participant) => { Console.WriteLine($"{participant.Identity} joined"); };
 
@@ -88,6 +73,8 @@ public class LiveKitService
             var message = Encoding.UTF8.GetString(e.Data);
             Console.WriteLine($"Data from {e.Participant?.Identity}: {message}");
         };
+
+        return _room;
     }
 
     public async Task ConnectMicrophone()
@@ -96,8 +83,6 @@ public class LiveKitService
 
         var audioTrack = LocalAudioTrack.Create($"{Username}-audio", _microphoneAudioSource);
         _publication = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
-
-        Console.WriteLine(_publication);
     }
 
     public void ToggleMute()
