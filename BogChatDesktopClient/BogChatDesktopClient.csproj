@@ -8,10 +8,10 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <PlatformTarget>x64</PlatformTarget>
+        <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <PlatformTarget>x64</PlatformTarget>
+        <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,9 +26,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-        <PackageReference Include="Emgu.CV" Version="4.12.0.5764"/>
-        <PackageReference Include="Emgu.CV.Bitmap" Version="4.12.0.5764"/>
-        <PackageReference Include="Emgu.CV.runtime.windows" Version="4.12.0.5764"/>
+        <PackageReference Include="Emgu.CV.Bitmap" Version="4.13.0.5924"/>
         <PackageReference Include="LibVLCSharp.Avalonia" Version="3.9.7.1"/>
         <PackageReference Include="LiveKit.AspNetCore.ServerSdk" Version="2.1.5" />
         <PackageReference Include="Livekit.Rtc.Dotnet" Version="0.1.2" />
@@ -40,5 +38,12 @@
 
     <ItemGroup>
         <Folder Include="Assets\Audio\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Controls\UserCard.axaml.cs">
+            <DependentUpon>UserCard.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 </Project>

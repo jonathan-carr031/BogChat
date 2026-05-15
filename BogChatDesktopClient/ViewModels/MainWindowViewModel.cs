@@ -1,23 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using BogChatDesktopClient.Services;
-using Emgu.CV;
-using Emgu.CV.CvEnum;
 using LibVLCSharp.Shared;
 using LiveKit.Rtc;
-using Bitmap = Avalonia.Media.Imaging.Bitmap;
+using Room = LiveKit.Rtc.Room;
 using VideoStream = LiveKit.Rtc.VideoStream;
 
 
@@ -32,33 +26,21 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private readonly string _outputFolder;
     private readonly VideoConverterService _videoConverter = new();
-    private Stack<Media> _mediaList = new();
 
     private MemoryStream _memoryStream = new();
     private Room? _room = null;
-    private StreamMediaInput _streamMediaInput;
 
-    private string _testOuput = "TestOutput";
-
-
-    private Bitmap _videoFrame;
+    private string _username;
+    // private StreamMediaInput _streamMediaInput;
 
     public MainWindowViewModel()
     {
-        TestOutput = "TestOutput";
+        RoomParticipants = [];
         MediaPlayer = new MediaPlayer(_libVlc);
 
-        MediaPlayer.EndReached += (sender, args) =>
-        {
-            // MediaPlayer.Play(_mediaList.Pop());
-            // Console.WriteLine("MediaPlayer.EndReached");
-        };
-
-        _streamMediaInput = new StreamMediaInput(_memoryStream);
-        Media = new Media(_libVlc, _streamMediaInput);
-
-        Media.AddOption(":input-stream-chunk-size=1024");
-        // MovieTest();
+        // _streamMediaInput = new StreamMediaInput(_memoryStream);
+        // Media = new Media(_libVlc, _streamMediaInput);
+        // Media.AddOption(":input-stream-chunk-size=1024");
 
         StreamableItems = [];
 
@@ -66,28 +48,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         _outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "SampleImages");
         Directory.CreateDirectory(_outputFolder);
-
-        CreateRandomPixelData();
-    }
-
-    public Bitmap VideoFrame
-    {
-        get => _videoFrame;
-        set
-        {
-            _videoFrame = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public string TestOutput
-    {
-        get => _testOuput;
-        set
-        {
-            _testOuput = value;
-            OnPropertyChanged();
-        }
     }
 
     public Media? Media { get; set; }
@@ -95,6 +55,18 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public MediaPlayer MediaPlayer { get; }
 
     public ObservableCollection<StreamableItem> StreamableItems { get; set; }
+
+    public string Username
+    {
+        get => _username;
+        set
+        {
+            _username = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ObservableCollection<RoomParticipant> RoomParticipants { get; set; }
 
     public void Dispose()
     {
@@ -132,29 +104,48 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     public async Task JoinRoom()
     {
+        _livekitService.SetUsername(Username);
         _room = await _livekitService.JoinRoom("room-name");
         _room.TrackSubscribed += TrackSubscribed;
+        _room.ActiveSpeakersChanged += SpeakerChanged;
         await _livekitService.ConnectMicrophone();
+
+        // foreach (var remoteParticipant in _room.RemoteParticipants)
+        // {
+        //     RoomParticipants.Add(new RoomParticipant
+        //     {
+        //         UserId = remoteParticipant.Key,
+        //         Username = remoteParticipant.Value.Name
+        //     });
+        // }
     }
 
     public async Task LeaveRoom()
     {
-        await _room?.DisconnectAsync()!;
+        await _livekitService.LeaveRoom();
         await _memoryStream.DisposeAsync();
+
+        RoomParticipants.Clear();
     }
 
-    public async void TrackSubscribed(object? sender, TrackSubscribedEventArgs e)
+    private async void TrackSubscribed(object? sender, TrackSubscribedEventArgs e)
     {
         Console.WriteLine("TrackSubscribed");
-        //Video Stuff
-        var movieUri = new Uri("https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_stereo.avi");
-        byte[] movieData;
 
-        using (HttpClient client = new HttpClient())
+        var roomParticipant =
+            RoomParticipants.FirstOrDefault(roomParticipant => roomParticipant.UserId == e.Participant.Identity);
+
+        if (roomParticipant == null)
         {
-            // Directly downloads the resource into a byte array
-            movieData = await client.GetByteArrayAsync(movieUri);
+            roomParticipant = new RoomParticipant
+            {
+                UserId = e.Participant.Identity,
+                Username = e.Participant.Name
+            };
+            RoomParticipants.Add(roomParticipant);
         }
+
+        //TODO: Check for user stop streaming
 
         if (e.Track is RemoteVideoTrack videoTrack)
         {
@@ -162,65 +153,21 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
             await foreach (var frame in videoStream.WithCancellation(CancellationToken.None))
             {
-                // Process video frame
-                // _memoryStream.Position = _memoryStream.Length;
-                // _memoryStream.Write(frame.Frame.DataBytes, 0, frame.Frame.DataBytes.Length);
-
-                Console.WriteLine($"{frame.Frame.Width} x {frame.Frame.Height}");
-                Console.WriteLine($"{frame.Frame.DataBytes.Length}");
-
-                VideoFrame =
+                roomParticipant.VideoStream =
                     _videoConverter.I420ToBitmap(frame.Frame.DataBytes, frame.Frame.Width, frame.Frame.Height);
-
-                var frameMat = new Mat(1080, 1280, DepthType.Cv8U, 1);
-                var rgbMat = new Mat();
-                CvInvoke.CvtColor(frameMat, rgbMat, ColorConversion.Yuv420sp2Rgb);
-                // frameMat.Save(Path.Combine(_outputFolder, $"FileImage_{DateTime.UtcNow.Ticks}.jpg"));
-                CvInvoke.Resize(frameMat, rgbMat, new Size(1920, 1080));
-
-                // VideoFrame = rgbMat.ToBitmap();
-                TestOutput = DateTime.Now.ToLongTimeString() + " - " + DateTime.Now.ToLongDateString();
-
-                // var tempData = movieData.Take(frame.Frame.DataBytes.Length).ToArray();
-                // movieData = movieData.Skip(frame.Frame.DataBytes.Length).ToArray();
-
-                // _memoryStream.Position = _memoryStream.Length;
-                // _memoryStream.Write(frame.Frame.DataBytes, 0, frame.Frame.DataBytes.Length);
-                // _streamMediaInput = new StreamMediaInput(_memoryStream);
-                // Media = new Media(_libVlc, _streamMediaInput);
-                //
-                // Media.AddOption(":input-stream-chunk-size=1024");
-                //
-                // _mediaList.Push(Media);
-                //
-                // MediaPlayer.SetVideoFormat("YUV", (uint)frame.Frame.Width, (uint)frame.Frame.Height, 32);
-
-                // var frameBitmap = _videoConverter.GetFrameBitmap(frame.Frame.DataBytes);
-
-                // Console.WriteLine(frameBitmap);
-
-                // CreateRandomPixelData();
+                ;
             }
         }
     }
 
-    public async void MovieTest()
+    private void SpeakerChanged(object? sender, ActiveSpeakersChangedEventArgs e)
     {
-        var movieUri = new Uri("https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_stereo.avi");
-
-        using (HttpClient client = new HttpClient())
+        foreach (var participant in RoomParticipants)
         {
-            // Directly downloads the resource into a byte array
-            var movieBytes = await client.GetByteArrayAsync(movieUri);
-
-            _memoryStream.Position = _memoryStream.Length;
-
-            _memoryStream.Write(movieBytes, 0, movieBytes.Length);
+            var isSpeaking = e.Speakers.FirstOrDefault(speaker => speaker.Identity == participant.UserId) != null;
+            participant.ShowBorder = isSpeaking ? new Thickness(4) : new Thickness(0);
         }
-
-        MediaPlayer.Play(Media);
     }
-
 
     public void Play()
     {
@@ -229,17 +176,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        // using var media = new Media(_libVlc, new Uri("https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_stereo.avi"));
         if (Media != null)
         {
-            // Console.WriteLine($"Is Media Parsed? {(Media.IsParsed ? "Yes" : "No")}");
-            // Console.WriteLine(Media.Tracks.Length);
-            // Console.WriteLine(Media.Tracks);
-            // Console.WriteLine(Media.ParsedStatus);
-
-
-            // _streamMediaInput = new StreamMediaInput(_memoryStream);
-            // Media = new Media(_libVlc, _streamMediaInput);
             MediaPlayer.Play(Media);
         }
     }
@@ -247,96 +185,5 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public void Stop()
     {
         MediaPlayer.Stop();
-    }
-
-    private void CreateRandomPixelData()
-    {
-        //Create pixel data to put in image, use 2 since it is 16bpp
-        var r = new Random(DateTime.Now.Millisecond);
-        int width = 100;
-        int height = 100;
-        byte[] pixelValues = new byte[width * height * 2];
-        for (int i = 0; i < pixelValues.Length; ++i)
-        {
-            // Just creating random pixel values for test
-            pixelValues[i] = (byte)r.Next(0, 256);
-        }
-
-        var rgbData = Convert16BitGrayScaleToRgb48(pixelValues, width, height);
-        var bmp = CreateBitmapFromBytes(rgbData, width, height);
-
-        // display bitmap
-        bmp.Save(Path.Combine(_outputFolder, $"FileImage_{DateTime.UtcNow.Ticks}.jpg"));
-        bmp.Save(Path.Combine(_outputFolder, "VideoFrame.jpg"));
-
-        // VideoFrame = bmp;
-    }
-
-    private void CreateBitmapFromPixelData(byte[] pixelData, int width, int height)
-    {
-        // var rgbData = Convert16BitGrayScaleToRgb48(pixelData, width, height);
-        var bmp = CreateBitmapFromBytes(pixelData, width, height);
-
-        // display bitmap
-        bmp.Save(Path.Combine(_outputFolder, $"FileImage_{DateTime.UtcNow.Ticks}.jpg"));
-        bmp.Save(Path.Combine(_outputFolder, "VideoFrame.jpg"));
-
-        // VideoFrame = bmp;
-    }
-
-    private static byte[] Convert16BitGrayScaleToRgb48(byte[] inBuffer, int width, int height)
-    {
-        int inBytesPerPixel = 2;
-        int outBytesPerPixel = 6;
-
-        byte[] outBuffer = new byte[width * height * outBytesPerPixel];
-        int inStride = width * inBytesPerPixel;
-        int outStride = width * outBytesPerPixel;
-
-        // Step through the image by row
-        for (int y = 0; y < height; y++)
-        {
-            // Step through the image by column
-            for (int x = 0; x < width; x++)
-            {
-                // Get inbuffer index and outbuffer index
-                int inIndex = (y * inStride) + (x * inBytesPerPixel);
-                int outIndex = (y * outStride) + (x * outBytesPerPixel);
-
-                byte hibyte = inBuffer[inIndex + 1];
-                byte lobyte = inBuffer[inIndex];
-
-                //R
-                outBuffer[outIndex] = lobyte;
-                outBuffer[outIndex + 1] = hibyte;
-
-                //G
-                outBuffer[outIndex + 2] = lobyte;
-                outBuffer[outIndex + 3] = hibyte;
-
-                //B
-                outBuffer[outIndex + 4] = lobyte;
-                outBuffer[outIndex + 5] = hibyte;
-            }
-        }
-
-        return outBuffer;
-    }
-
-    private static System.Drawing.Bitmap CreateBitmapFromBytes(byte[] pixelValues, int width, int height)
-    {
-        //Create an image that will hold the image data
-        System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(width, height, PixelFormat.Format48bppRgb);
-
-        //Get a reference to the images pixel data
-        Rectangle dimension = new Rectangle(0, 0, bmp.Width, bmp.Height);
-        BitmapData picData = bmp.LockBits(dimension, ImageLockMode.ReadWrite, bmp.PixelFormat);
-        IntPtr pixelStartAddress = picData.Scan0;
-
-        //Copy the pixel data into the bitmap structure
-        Marshal.Copy(pixelValues, 0, pixelStartAddress, pixelValues.Length);
-
-        bmp.UnlockBits(picData);
-        return bmp;
     }
 }

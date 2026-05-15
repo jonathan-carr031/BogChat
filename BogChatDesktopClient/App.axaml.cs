@@ -2,9 +2,12 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Metadata;
 using BogChatDesktopClient.Services;
 using BogChatDesktopClient.ViewModels;
 using BogChatDesktopClient.Views;
+
+[assembly: XmlnsDefinition("https://github.com/avaloniaui", "BogChatDesktopClient.Controls")]
 
 namespace BogChatDesktopClient;
 
@@ -33,7 +36,7 @@ public partial class App : Application
             {
                 splashScreenViewModel.StartupMessage = "Checking For Updates...";
                 await splashScreenViewModel.CheckForUpdates();
-                await Task.Delay(10000);
+                // await Task.Delay(10000);
             }
             catch (TaskCanceledException)
             {

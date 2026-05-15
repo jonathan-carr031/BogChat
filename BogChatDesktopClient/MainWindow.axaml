@@ -3,50 +3,71 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:BogChatDesktopClient.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
         x:Class="BogChatDesktopClient.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
         Title="BogChatDesktopClient"
         Background="#232323">
-    <DockPanel Background="BlueViolet">
-        <TextBlock Name="HeaderText" Text="{Binding TestOutput}"></TextBlock>
 
-        <Panel Name="ImagePanel">
-            <Image Name="VideoOutput"
-                   Width="600"
-                   Height="400"
-                   Stretch="Fill"
-                   Source="{Binding VideoFrame}">
-            </Image>
-        </Panel>
+    <Window.Styles>
+        <StyleInclude Source="/Styles/UserCardStyles.axaml" />
+    </Window.Styles>
 
-        <Button Command="{Binding JoinRoom}">Join The Bog</Button>
-        <Button Command="{Binding LeaveRoom}">Leave The Bog</Button>
-        <!-- -->
-        <!-- -->
-        <Button Click="Mute">Mute</Button>
-        <Button Click="UnMute">UnMute</Button>
-        <!-- <Button Click="RecordMic">RecordMic</Button> -->
-        <!-- <Button Click="StopRecording">StopRecording</Button> -->
+    <Panel Margin="6">
+        <StackPanel
+            Orientation="Horizontal"
+            Background="#1f1f1f">
+            <Border CornerRadius="3"
+                    Background="#31402e">
+                <StackPanel Name="UserPanel"
+                            Margin="12">
+                    <TextBlock Text="Username:" Padding="6"></TextBlock>
+                    <TextBox Name="Username" Text="{Binding Username, Mode=TwoWay}"
+                             Width="100">
+                    </TextBox>
 
-        <!-- <Panel DockPanel.Dock="Right"> -->
-        <!--     <ItemsRepeater ItemsSource="{Binding StreamableItems}"> -->
-        <!--         <ItemsRepeater.ItemTemplate> -->
-        <!--             <DataTemplate> -->
-        <!--                 <Border Margin="0,10,0,0" -->
-        <!--                         CornerRadius="5" -->
-        <!--                         BorderBrush="Black" BorderThickness="1" -->
-        <!--                         Padding="5"> -->
-        <!--                     <StackPanel Orientation="Horizontal"> -->
-        <!--                         <Button -->
-        <!--                             Command="{Binding $parent[ItemsRepeater].((viewModels:MainWindowViewModel)DataContext).StreamableItemClickEvent}" -->
-        <!--                             CommandParameter="{Binding}" -->
-        <!--                             Content="{Binding WindowTitle}" /> -->
-        <!--                     </StackPanel> -->
-        <!--                 </Border> -->
-        <!--             </DataTemplate> -->
-        <!--         </ItemsRepeater.ItemTemplate> -->
-        <!--     </ItemsRepeater> -->
-        <!-- </Panel> -->
-    </DockPanel>
+                    <Button Margin="0 6"
+                            Command="{Binding JoinRoom}">
+                        Join The Bog
+                    </Button>
+                    <Button Command="{Binding LeaveRoom}">Leave The Bog</Button>
+                </StackPanel>
+            </Border>
+            <StackPanel Name="ContentPanel">
+                <ItemsRepeater ItemsSource="{Binding RoomParticipants}">
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <UserCard Margin="20"
+                                      RoomParticipant="{Binding}" />
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+
+                <Button Click="Mute">Mute</Button>
+                <Button Click="UnMute">UnMute</Button>
+                <!-- <Button Click="RecordMic">RecordMic</Button> -->
+                <!-- <Button Click="StopRecording">StopRecording</Button> -->
+
+                <!-- <Panel DockPanel.Dock="Right"> -->
+                <!--     <ItemsRepeater ItemsSource="{Binding StreamableItems}"> -->
+                <!--         <ItemsRepeater.ItemTemplate> -->
+                <!--             <DataTemplate> -->
+                <!--                 <Border Margin="0,10,0,0" -->
+                <!--                         CornerRadius="5" -->
+                <!--                         BorderBrush="Black" BorderThickness="1" -->
+                <!--                         Padding="5"> -->
+                <!--                     <StackPanel Orientation="Horizontal"> -->
+                <!--                         <Button -->
+                <!--                             Command="{Binding $parent[ItemsRepeater].((viewModels:MainWindowViewModel)DataContext).StreamableItemClickEvent}" -->
+                <!--                             CommandParameter="{Binding}" -->
+                <!--                             Content="{Binding WindowTitle}" /> -->
+                <!--                     </StackPanel> -->
+                <!--                 </Border> -->
+                <!--             </DataTemplate> -->
+                <!--         </ItemsRepeater.ItemTemplate> -->
+                <!--     </ItemsRepeater> -->
+                <!-- </Panel> -->
+            </StackPanel>
+        </StackPanel>
+    </Panel>
 </Window>

@@ -16,8 +16,6 @@ public class LiveKitService
 
     // private const string ApiSecret = "nfFhkIxwefgFzu50reCSmesvtmuHPTzZ";
     private const string ApiSecret = "grK2qDGUOc4ylMGt2Jx4KYHFHnnzoCsDOXpKSh7nPnJ";
-    private const string Username = "desktop";
-    private const string UserIdentity = "desktop-identity";
 
     private readonly AudioHandler _audioHandler;
 
@@ -25,7 +23,8 @@ public class LiveKitService
     private AudioSource _microphoneAudioSource;
     private LocalTrackPublication _publication;
 
-    private Room _room;
+    private Room? _room;
+    private string _username = "desktop";
 
     public LiveKitService()
     {
@@ -44,8 +43,8 @@ public class LiveKitService
     private string GetAccessToken(string roomName)
     {
         var token = new AccessToken(ApiKey, ApiSecret)
-            .WithIdentity(UserIdentity)
-            .WithName(Username)
+            .WithIdentity($"{_username}-identity")
+            .WithName(_username)
             .WithGrants(new VideoGrants { RoomJoin = true, Room = roomName })
             .WithTtl(TimeSpan.FromHours(24));
 
@@ -54,6 +53,11 @@ public class LiveKitService
 
     public async Task<Room> JoinRoom(string roomName)
     {
+        if (_room != null)
+        {
+            await LeaveRoom();
+        }
+
         var accessToken = GetAccessToken(roomName);
 
         _room = new Room();
@@ -62,7 +66,7 @@ public class LiveKitService
 
         Console.WriteLine($"Connected to {_room.Name}");
 
-        _room.TrackSubscribed += async (sender, e) => { };
+        // _room.TrackSubscribed += async (sender, e) => { };
 
         _room.ParticipantConnected += (sender, participant) => { Console.WriteLine($"{participant.Identity} joined"); };
 
@@ -79,9 +83,10 @@ public class LiveKitService
 
     public async Task ConnectMicrophone()
     {
+        if (_room == null) return;
         _microphoneAudioSource = InitializeAudioSource();
 
-        var audioTrack = LocalAudioTrack.Create($"{Username}-audio", _microphoneAudioSource);
+        var audioTrack = LocalAudioTrack.Create($"{_username}-audio", _microphoneAudioSource);
         _publication = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
     }
 
@@ -100,6 +105,15 @@ public class LiveKitService
 
     public async Task LeaveRoom()
     {
-        await _room.DisconnectAsync();
+        if (_room != null)
+        {
+            await _room.DisconnectAsync();
+            _room = null;
+        }
+    }
+
+    public void SetUsername(string username)
+    {
+        _username = username;
     }
 }

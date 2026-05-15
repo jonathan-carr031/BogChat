@@ -1,0 +1,30 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:bogChatDesktopClient="clr-namespace:BogChatDesktopClient"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="169"
+             Background="Transparent"
+             x:Class="BogChatDesktopClient.Controls.UserCard"
+             x:DataType="bogChatDesktopClient:RoomParticipant">
+
+    <Border CornerRadius="12"
+            ClipToBounds="True"
+            BorderBrush="#44FF33"
+            BorderThickness="{Binding ShowBorder}"
+            Background="#131313">
+        <Border CornerRadius="12"
+                ClipToBounds="True">
+            <Panel>
+                <Image Name="DisplayImage"
+                       Width="300"
+                       Height="169"
+                       Stretch="Fill"
+                       Source="{Binding VideoStream}" />
+
+                <TextBlock Text="{Binding Username}" Margin="20"></TextBlock>
+            </Panel>
+        </Border>
+    </Border>
+
+</UserControl>

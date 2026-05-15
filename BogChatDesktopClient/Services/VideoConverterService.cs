@@ -1,103 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
-using Emgu.CV;
-using Emgu.CV.CvEnum;
+using System.Runtime.Versioning;
+using Bitmap = Avalonia.Media.Imaging.Bitmap;
 
 namespace BogChatDesktopClient.Services;
 
+[SupportedOSPlatform("windows")]
 public class VideoConverterService
 {
-    public static string fileName = "TestFile.mp4";
-
-
-    private readonly string _outputFolder;
-
-    private List<Bitmap> _videoFrames = [];
-
-    public string filePath =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "VideoConverterTest");
-
-    public int h264Codec = VideoWriter.Fourcc('H', '2', '6', '4');
-    public int iyuvCodec = VideoWriter.Fourcc('I', 'Y', 'U', 'V');
-    public int mjpgCodec = VideoWriter.Fourcc('M', 'J', 'P', 'G');
-
-    public int mp4vCodec = VideoWriter.Fourcc('M', 'P', '4', 'V');
-
-    public int videoHeight;
-
-    public Size videoSize = new(1920, 1080);
-    public int videoWidth;
-    public VideoWriter videoWriter;
-    public int xvidCodec = VideoWriter.Fourcc('X', 'V', 'I', 'D');
-
-
-    public VideoConverterService()
+    public Bitmap I420ToBitmap(byte[] data, int width, int height)
     {
-        var backends = GetBackends();
-
-        foreach (var backend in backends)
-        {
-            Console.WriteLine(backend.Name);
-        }
-
-        _outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "SampleImages");
-        Directory.CreateDirectory(_outputFolder);
-    }
-
-
-    public Backend[] GetBackends()
-    {
-        return CvInvoke.WriterBackends;
-    }
-
-    public Bitmap GetFrameBitmap(byte[] data)
-    {
-        var frame = new Mat();
-        var resizedFrame = new Mat();
-
-        CvInvoke.Imdecode(data, ImreadModes.ColorRgb, frame);
-        CvInvoke.Resize(frame, resizedFrame, videoSize);
-
-        return resizedFrame.ToBitmap();
-    }
-
-    public Bitmap GetFrameFromData(byte[] data, int width, int height)
-    {
-        var bitmap = new Bitmap(width, height);
-        var rectangle = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-        var pictureData = bitmap.LockBits(rectangle, ImageLockMode.ReadWrite, bitmap.PixelFormat);
-        var pixelStartAddress = pictureData.Scan0;
-
-        Marshal.Copy(data, 0, pixelStartAddress, data.Length);
-        bitmap.UnlockBits(pictureData);
-
-        bitmap.Save(Path.Combine(_outputFolder, $"FileImage_{DateTime.UtcNow.Ticks}.jpg"));
-        bitmap.Save(Path.Combine(_outputFolder, "VideoFrame.jpg"));
-
-        return bitmap;
-    }
-
-    // public void GetVideo()
-    // {
-    //     var outputFile = Path.Combine(_outputFolder, fileName);
-    //     videoWriter = new VideoWriter(outputFile, GetBackends()[0].ID, mjpgCodec, 30, videoSize, true);
-    //
-    //     foreach (var frame in _videoFrames)
-    //     {
-    //         videoWriter.Write(frame.ToMat());
-    //     }
-    //
-    //     videoWriter.Dispose();
-    //     _videoFrames?.Clear();
-    // }
-
-    public Avalonia.Media.Imaging.Bitmap I420ToBitmap(byte[] data, int width, int height)
-    {
-        var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+        var bitmap = new System.Drawing.Bitmap(width, height, PixelFormat.Format32bppArgb);
         var bitmapData =
             bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
 
@@ -141,26 +56,14 @@ public class VideoConverterService
         }
 
         bitmap.UnlockBits(bitmapData);
-        // bitmap.Save(Path.Combine(_outputFolder, $"FileImage_{DateTime.UtcNow.Ticks}.jpg"));
-        // bitmap.Save(Path.Combine(_outputFolder, "VideoFrame.jpg"));
-
-        // _videoFrames.Add(bitmap);
-
-
-        if (_videoFrames.Count > 500)
-        {
-            // GetVideo();
-        }
-
 
         using var memory = new MemoryStream();
         bitmap.Save(memory, ImageFormat.Jpeg);
         memory.Position = 0;
 
         //AvIrBitmap is our new Avalonia compatible image. You can pass this to your view
-        Avalonia.Media.Imaging.Bitmap AvIrBitmap = new Avalonia.Media.Imaging.Bitmap(memory);
+        var avaloniaBitmap = new Bitmap(memory);
 
-
-        return AvIrBitmap;
+        return avaloniaBitmap;
     }
 }
