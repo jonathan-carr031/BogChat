@@ -3,7 +3,7 @@
 ; Non-commercial use only
 
 #define MyAppName "BogChat"
-#define MyAppVersion "1.0.0"
+; #define MyAppVersion "1.0.0"
 #define MyAppPublisher "Boginites"
 #define MyAppExeName "BogChat.exe"
 #define MyAppAssocName MyAppName
