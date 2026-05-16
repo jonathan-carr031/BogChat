@@ -46,7 +46,7 @@ internal partial class SplashScreenViewModel : ViewModelBase
 
             if (downloadedAsset == null) return;
 
-            //await AppUpdater.InstallUpdateAsync(downloadedAsset);
+            await AppUpdater.InstallUpdateAsync(downloadedAsset);
         }
         catch (Exception ex)
         {
