@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using BogChatDesktopClient.Data;
 
 namespace BogChatDesktopClient.Controls;
 

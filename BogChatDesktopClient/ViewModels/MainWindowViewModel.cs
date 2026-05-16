@@ -6,11 +6,13 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
+using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Services;
 using LibVLCSharp.Shared;
 using LiveKit.Rtc;
+using NAudio.Wave;
 using Room = LiveKit.Rtc.Room;
 using VideoStream = LiveKit.Rtc.VideoStream;
 
@@ -28,19 +30,17 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly VideoConverterService _videoConverter = new();
 
     private MemoryStream _memoryStream = new();
-    private Room? _room = null;
+    private Room? _room;
 
     private string _username;
     // private StreamMediaInput _streamMediaInput;
+
+    private WaveOutEvent _waveOut;
 
     public MainWindowViewModel()
     {
         RoomParticipants = [];
         MediaPlayer = new MediaPlayer(_libVlc);
-
-        // _streamMediaInput = new StreamMediaInput(_memoryStream);
-        // Media = new Media(_libVlc, _streamMediaInput);
-        // Media.AddOption(":input-stream-chunk-size=1024");
 
         StreamableItems = [];
 
@@ -94,11 +94,11 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         if (item.ProcessId > 0)
         {
-            _ = Task.Run(() => { _audioCapture.CaptureApplicationAudio((uint)item.ProcessId); });
+            _ = Task.Run(() => { ApplicationAudioCapture.CaptureApplicationAudio((uint)item.ProcessId); });
 
             await Task.Delay(5000);
 
-            _audioCapture.StopApplicationAudio();
+            ApplicationAudioCapture.StopApplicationAudio();
         }
     }
 
@@ -109,15 +109,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _room.TrackSubscribed += TrackSubscribed;
         _room.ActiveSpeakersChanged += SpeakerChanged;
         await _livekitService.ConnectMicrophone();
-
-        // foreach (var remoteParticipant in _room.RemoteParticipants)
-        // {
-        //     RoomParticipants.Add(new RoomParticipant
-        //     {
-        //         UserId = remoteParticipant.Key,
-        //         Username = remoteParticipant.Value.Name
-        //     });
-        // }
     }
 
     public async Task LeaveRoom()
@@ -155,7 +146,29 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             {
                 roomParticipant.VideoStream =
                     _videoConverter.I420ToBitmap(frame.Frame.DataBytes, frame.Frame.Width, frame.Frame.Height);
-                ;
+            }
+        }
+
+        if (e.Track is RemoteAudioTrack audioTrack)
+        {
+            await using var audioStream = new AudioStream(audioTrack);
+
+            var sampleRate = (int)48000;
+            var channels = 1;
+            var waveFormat = new WaveFormat(sampleRate, channels);
+            var bufferedWaveProvider = new BufferedWaveProvider(waveFormat)
+            {
+                DiscardOnBufferOverflow = true
+            };
+
+            var waveOut = new WaveOutEvent();
+            waveOut.Init(bufferedWaveProvider);
+
+            waveOut.Play();
+
+            await foreach (var frame in audioStream.WithCancellation(CancellationToken.None))
+            {
+                bufferedWaveProvider.AddSamples(frame.Frame.DataBytes, 0, frame.Frame.DataBytes.Length);
             }
         }
     }
@@ -165,7 +178,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         foreach (var participant in RoomParticipants)
         {
             var isSpeaking = e.Speakers.FirstOrDefault(speaker => speaker.Identity == participant.UserId) != null;
-            participant.ShowBorder = isSpeaking ? new Thickness(4) : new Thickness(0);
+            participant.BorderColor = isSpeaking ? Brush.Parse("#44FF33") : Brushes.Transparent;
         }
     }
 

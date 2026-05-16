@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Metadata;
-using BogChatDesktopClient.Services;
 using BogChatDesktopClient.ViewModels;
 using BogChatDesktopClient.Views;
 
@@ -11,10 +10,8 @@ using BogChatDesktopClient.Views;
 
 namespace BogChatDesktopClient;
 
-public partial class App : Application
+public class App : Application
 {
-    private AuthentikService _authentikService = new();
-
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -36,7 +33,6 @@ public partial class App : Application
             {
                 splashScreenViewModel.StartupMessage = "Checking For Updates...";
                 await splashScreenViewModel.CheckForUpdates();
-                // await Task.Delay(10000);
             }
             catch (TaskCanceledException)
             {
@@ -61,13 +57,12 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    void OnExit(object sender, ControlledApplicationLifetimeExitEventArgs e)
+    private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var vm = (MainWindowViewModel)desktop.MainWindow?.DataContext;
-            if (vm != null)
-                vm.Dispose();
+            var vm = (MainWindowViewModel)desktop.MainWindow?.DataContext!;
+            vm.Dispose();
         }
     }
 }

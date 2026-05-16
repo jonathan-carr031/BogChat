@@ -70,7 +70,7 @@ public class LiveKitService
 
         _room.ParticipantConnected += (sender, participant) => { Console.WriteLine($"{participant.Identity} joined"); };
 
-        _room.ActiveSpeakersChanged += (sender, e) => { Console.WriteLine($"Active speakers: {e.Speakers.Count}"); };
+        // _room.ActiveSpeakersChanged += (sender, e) => { Console.WriteLine($"Active speakers: {e.Speakers.Count}"); };
 
         _room.DataReceived += (sender, e) =>
         {

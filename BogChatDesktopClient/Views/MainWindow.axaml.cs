@@ -2,7 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using BogChatDesktopClient.Services;
 
-namespace BogChatDesktopClient;
+namespace BogChatDesktopClient.Views;
 
 public partial class MainWindow : Window
 {
@@ -35,6 +35,6 @@ public partial class MainWindow : Window
 
     private void StopRecording(object? sender, RoutedEventArgs e)
     {
-        _audioCapture.StopApplicationAudio();
+        ApplicationAudioCapture.StopApplicationAudio();
     }
 }

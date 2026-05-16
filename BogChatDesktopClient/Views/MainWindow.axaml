@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:BogChatDesktopClient.ViewModels"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
-        x:Class="BogChatDesktopClient.MainWindow"
+        x:Class="BogChatDesktopClient.Views.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
         Title="BogChatDesktopClient"
         Background="#232323">

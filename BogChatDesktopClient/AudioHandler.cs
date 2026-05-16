@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using NAudio.Wave;
 
@@ -8,32 +7,41 @@ namespace BogChatDesktopClient;
 //TODO: Implement IDisposable?
 public class AudioHandler : IDisposable
 {
-    private WaveFileWriter? _writer;
-
     private readonly IWaveIn _captureDevice;
-    private string _outputFilename;
-    private string _outputFolder;
     private readonly WaveOutEvent? _waveOutEvent;
 
-    private bool _writeToFile = false;
+    private bool _isMicrophoneOn;
+    private string _outputFilename;
+    private string _outputFolder;
+    private WaveFileWriter? _writer;
 
-    private bool _isMicrophoneOn = false;
+    private bool _writeToFile;
 
-    public int BytesRecorded;
-    public byte[] BytesBuffer;
+    public Action<byte[], int>? OnDataReceived;
 
     public AudioHandler()
     {
         _captureDevice = InitializeWaveIn();
+        var bufferedWaveProvider = new BufferedWaveProvider(_captureDevice.WaveFormat)
+        {
+            DiscardOnBufferOverflow = true
+        };
 
-        // var waveInProvider = new WaveInProvider(_captureDevice);
         // _waveOutEvent = new WaveOutEvent();
-        // _waveOutEvent.Init(waveInProvider);
+        // _waveOutEvent.Init(bufferedWaveProvider);
+        // _waveOutEvent.Volume = 0;
+        // _waveOutEvent.Play();
     }
-    
-    public Action<byte[], int>? OnDataReceived;
 
     public IWaveIn WaveIn => _captureDevice;
+
+    public void Dispose()
+    {
+        _writer?.Dispose();
+        _writer = null;
+        _captureDevice.Dispose();
+        _waveOutEvent?.Dispose();
+    }
 
     private void InitializeRecordingOutput()
     {
@@ -64,7 +72,6 @@ public class AudioHandler : IDisposable
         if (_isMicrophoneOn) return;
 
         _captureDevice.StartRecording();
-        // _waveOutEvent.Play();
         _isMicrophoneOn = true;
     }
 
@@ -85,15 +92,11 @@ public class AudioHandler : IDisposable
         if (!_isMicrophoneOn) return;
 
         _captureDevice.StopRecording();
-        // _waveOutEvent.Stop();
         _isMicrophoneOn = false;
     }
 
     private void OnDataAvailable(object? sender, WaveInEventArgs e)
     {
-        BytesRecorded = e.BytesRecorded;
-        BytesBuffer = e.Buffer;
-
         if (OnDataReceived != null)
         {
             OnDataReceived(e.Buffer, e.BytesRecorded);
@@ -114,18 +117,11 @@ public class AudioHandler : IDisposable
     {
         Console.WriteLine(sender);
         Console.WriteLine(e);
+        Console.WriteLine(_captureDevice);
 
         if (_writeToFile)
         {
             _writer?.Dispose();
         }
-    }
-
-    public void Dispose()
-    {
-        _writer?.Dispose();
-        _writer = null;
-        _captureDevice.Dispose();
-        _waveOutEvent?.Dispose();
     }
 }

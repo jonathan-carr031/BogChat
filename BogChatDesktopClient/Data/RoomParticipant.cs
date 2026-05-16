@@ -1,26 +1,17 @@
-﻿using Avalonia;
+﻿using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace BogChatDesktopClient;
+namespace BogChatDesktopClient.Data;
 
 public class RoomParticipant : ObservableObject
 {
-    private Thickness _showBorder = new(0);
+    private IBrush? _borderColor;
 
+    private string _speakingIndicator;
     private Bitmap? _videoStream;
     public string? UserId { get; set; }
     public string? Username { get; set; }
-
-    public Thickness ShowBorder
-    {
-        get => _showBorder;
-        set
-        {
-            _showBorder = value;
-            OnPropertyChanged();
-        }
-    }
 
     public Bitmap? VideoStream
     {
@@ -28,6 +19,16 @@ public class RoomParticipant : ObservableObject
         set
         {
             _videoStream = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public IBrush? BorderColor
+    {
+        get => _borderColor;
+        set
+        {
+            _borderColor = value;
             OnPropertyChanged();
         }
     }

@@ -7,7 +7,7 @@ namespace BogChatDesktopClient.Services;
 
 public class ApplicationAudioCapture
 {
-    static MemoryStream ms;
+    private static MemoryStream _memoryStream = new();
 
     [DllImport("ApplicationLoopback.dll", CallingConvention = CallingConvention.StdCall)]
     static extern void SetAudioCallback(AudioCallback callback);
@@ -19,66 +19,49 @@ public class ApplicationAudioCapture
     [DllImport("ApplicationLoopback.dll", CallingConvention = CallingConvention.StdCall)]
     static extern int StopCaptureAsync();
 
-
-    static void OnAudioReceived(IntPtr data, int length)
+    private static void OnAudioReceived(IntPtr data, int length)
     {
         byte[] buffer = new byte[length];
         Marshal.Copy(data, buffer, 0, length);
 
-        ms.Write(buffer, 0, buffer.Length); // Writing PCM to temp stream to converting it to WAV later.
+        _memoryStream.Write(buffer, 0, buffer.Length); // Writing PCM to temp stream to converting it to WAV later.
 
         Console.WriteLine($"Audio bytes are receiving from specified process: {length} byte");
     }
 
-    public void CaptureApplicationAudio(uint processId)
+    public static void CaptureApplicationAudio(uint processId)
     {
-        ms = new MemoryStream();
+        _memoryStream = new MemoryStream();
 
-        SetAudioCallback(OnAudioReceived); // we are declaring our audio output event in PCM format.
+        SetAudioCallback(OnAudioReceived);
 
-        StartCaptureAsync(processId, true, 1, 44100, 16); // Process PID number and includes process tree or not.
+        StartCaptureAsync(processId, true, 1, 44100, 16);
     }
 
-    public void StopApplicationAudio()
+    public static void StopApplicationAudio()
     {
         StopCaptureAsync();
         var outputPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "NAudioDemo");
-        WavConverter.WriteWavFile(ms, Path.Combine(outputPath, "Audio.wav"), 44100, 1,
+        WavConverter.WriteWavFile(_memoryStream, Path.Combine(outputPath, "Audio.wav"), 44100, 1,
             16); // We are converting PCM format to WAV.
 
-        ms.Close();
-        ms.Flush();
-        ms.Dispose();
-    }
-
-    static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
-    {
-        Console.WriteLine("Audio capture from specified process is started, press CTRL + C to stop.");
-
-        StopCaptureAsync();
-
-
-        WavConverter.WriteWavFile(ms, "Audio.wav", 44100, 1, 16); // We are converting PCM format to WAV.
-
-        ms.Close();
-        ms.Flush();
-        ms.Dispose();
+        _memoryStream.Close();
+        _memoryStream.Flush();
+        _memoryStream.Dispose();
     }
 
     delegate void AudioCallback(IntPtr data, int length);
 
-    public class WavConverter
+    private static class WavConverter
     {
         public static void WriteWavFile(MemoryStream pcmStream, string outputPath, int sampleRate, short channels,
             short bitDepth)
         {
-            byte[] pcmData = pcmStream.ToArray();
+            var pcmData = pcmStream.ToArray();
 
-            using (FileStream fs = new FileStream(outputPath, FileMode.Create))
-            {
-                WriteWavHeader(fs, pcmData.Length, sampleRate, channels, bitDepth);
-                fs.Write(pcmData, 0, pcmData.Length);
-            }
+            using FileStream fs = new FileStream(outputPath, FileMode.Create);
+            WriteWavHeader(fs, pcmData.Length, sampleRate, channels, bitDepth);
+            fs.Write(pcmData, 0, pcmData.Length);
         }
 
         private static void WriteWavHeader(FileStream fs, int pcmDataLength, int sampleRate, short channels,
