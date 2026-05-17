@@ -1,3 +1,4 @@
+using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using BogChatDesktopClient.Services;
@@ -6,12 +7,15 @@ namespace BogChatDesktopClient.Views;
 
 public partial class MainWindow : Window
 {
-    private readonly AudioHandler _audioHandler = new();
+    // private readonly AudioHandler _audioHandler = new();
     private readonly LiveKitService _livekitService = new();
 
     public MainWindow()
     {
         InitializeComponent();
+
+        VersionNumber.Text = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
     }
 
     private void Mute(object? sender, RoutedEventArgs e)
@@ -24,15 +28,15 @@ public partial class MainWindow : Window
         _livekitService.ToggleMute();
     }
 
-    private void RecordMic(object? sender, RoutedEventArgs e)
-    {
-        _audioHandler.StartRecording();
-    }
+    // private void RecordMic(object? sender, RoutedEventArgs e)
+    // {
+    //     _audioHandler.StartRecording();
+    // }
 
-    private void StopRecording(object? sender, RoutedEventArgs e)
-    {
-        ApplicationAudioCapture.StopApplicationAudio();
-    }
+    // private void StopRecording(object? sender, RoutedEventArgs e)
+    // {
+    //     ApplicationAudioCapture.StopApplicationAudio();
+    // }
 
     private void JoinRoom(object? sender, RoutedEventArgs e)
     {

@@ -6,8 +6,7 @@
              xmlns:viewModels1="clr-namespace:BogChatDesktopClient.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="BogChatDesktopClient.Views.VideoPlayer"
-             x:DataType="viewModels1:MainWindowViewModel"
-             DataContextChanged="OnDataContextChanged">
+             x:DataType="viewModels1:MainWindowViewModel">
 
     <Design.DataContext>
         <viewModels1:MainWindowViewModel />
@@ -23,7 +22,7 @@
                        PointerExited="VideoViewOnPointerExited">
             <Panel Name="ControlsPanel">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Background="#900000FF" Spacing="20">
-                    <Button Command="{Binding Play}" Margin="20">Play</Button>
+                    <!-- <Button Command="{Binding Play}" Margin="20">Play</Button> -->
                     <Button Command="{Binding Stop}" Margin="20">Stop</Button>
                 </StackPanel>
             </Panel>

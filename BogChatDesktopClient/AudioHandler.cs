@@ -4,14 +4,12 @@ using NAudio.Wave;
 
 namespace BogChatDesktopClient;
 
-//TODO: Implement IDisposable?
 public class AudioHandler : IDisposable
 {
     private const int SampleRate = 14400;
     private const int Channels = 1;
 
     private readonly IWaveIn _captureDevice;
-    private readonly WaveOutEvent? _waveOutEvent;
 
     private bool _isMicrophoneOn;
     private string _outputFilename;
@@ -25,15 +23,6 @@ public class AudioHandler : IDisposable
     public AudioHandler()
     {
         _captureDevice = InitializeWaveIn();
-        var bufferedWaveProvider = new BufferedWaveProvider(_captureDevice.WaveFormat)
-        {
-            DiscardOnBufferOverflow = true
-        };
-
-        // _waveOutEvent = new WaveOutEvent();
-        // _waveOutEvent.Init(bufferedWaveProvider);
-        // _waveOutEvent.Volume = 0;
-        // _waveOutEvent.Play();
     }
 
     public IWaveIn WaveIn => _captureDevice;
@@ -43,7 +32,6 @@ public class AudioHandler : IDisposable
         _writer?.Dispose();
         _writer = null;
         _captureDevice.Dispose();
-        _waveOutEvent?.Dispose();
     }
 
     private void InitializeRecordingOutput()
@@ -117,10 +105,6 @@ public class AudioHandler : IDisposable
 
     private void OnRecordingStopped(object? sender, StoppedEventArgs e)
     {
-        Console.WriteLine(sender);
-        Console.WriteLine(e);
-        Console.WriteLine(_captureDevice);
-
         if (_writeToFile)
         {
             _writer?.Dispose();

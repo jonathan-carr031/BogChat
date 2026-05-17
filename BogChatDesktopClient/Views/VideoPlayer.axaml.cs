@@ -1,7 +1,5 @@
-﻿using System;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
-using BogChatDesktopClient.ViewModels;
 
 namespace BogChatDesktopClient.Views;
 
@@ -12,13 +10,13 @@ public partial class VideoPlayer : UserControl
         InitializeComponent();
     }
 
-    private void OnDataContextChanged(object sender, EventArgs e)
-    {
-        if (DataContext is MainWindowViewModel vm)
-        {
-            vm.Play();
-        }
-    }
+    // private void OnDataContextChanged(object sender, EventArgs e)
+    // {
+    //     if (DataContext is MainWindowViewModel vm)
+    //     {
+    //         // vm.Play();
+    //     }
+    // }
 
     private void VideoViewOnPointerEntered(object sender, PointerEventArgs e)
     {

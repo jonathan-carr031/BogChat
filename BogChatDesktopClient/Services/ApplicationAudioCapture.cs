@@ -26,7 +26,7 @@ public class ApplicationAudioCapture
 
         _memoryStream.Write(buffer, 0, buffer.Length); // Writing PCM to temp stream to converting it to WAV later.
 
-        Console.WriteLine($"Audio bytes are receiving from specified process: {length} byte");
+        // Console.WriteLine($"Audio bytes are receiving from specified process: {length} byte");
     }
 
     public static void CaptureApplicationAudio(uint processId)

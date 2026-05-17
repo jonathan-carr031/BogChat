@@ -3,10 +3,10 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using BogChatDesktopClient.Data;
@@ -20,6 +20,7 @@ using VideoStream = LiveKit.Rtc.VideoStream;
 
 namespace BogChatDesktopClient.ViewModels;
 
+[SupportedOSPlatform("windows")]
 public class MainWindowViewModel : ViewModelBase, IDisposable
 {
     // private readonly ApplicationAudioCapture _audioCapture = new();
@@ -27,16 +28,16 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly LibVLC _libVlc = new();
     private readonly LiveKitService _livekitService = new();
 
-    private readonly VideoConverterService _videoConverter = new();
-
-    private MemoryStream _memoryStream = new();
-    private Room? _room;
+    private readonly MemoryStream _memoryStream = new();
 
     // private WaveOutEvent _waveOut;
 
-    private DispatcherTimer _timer;
+    private readonly DispatcherTimer _timer;
 
-    private string _username;
+    private readonly VideoConverterService _videoConverter = new();
+    private Room? _room;
+
+    private string? _username;
 
     public MainWindowViewModel()
     {
@@ -57,7 +58,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _timer.Start();
     }
 
-    public Media? Media { get; set; }
+    // public Media? Media { get; }
 
     public MediaPlayer MediaPlayer { get; }
 
@@ -65,7 +66,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public ObservableCollection<RoomParticipant> RoomParticipants { get; set; }
     public ObservableCollection<string?> RoomPeople { get; set; } = [];
 
-    public string Username
+    public string? Username
     {
         get => _username;
         set
@@ -84,7 +85,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private async Task GetRoomParticipants(string roomName)
     {
-        var participants = await _livekitService.GetRoomParticipants("room-name");
+        var participants = await _livekitService.GetRoomParticipants(roomName);
 
         RoomPeople.Clear();
 
@@ -96,11 +97,37 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     public async Task JoinRoom()
     {
-        _livekitService.SetUsername(Username);
+        if (Username != null) _livekitService.SetUsername(Username);
         _room = await _livekitService.JoinRoom("room-name");
         _room.TrackSubscribed += TrackSubscribed;
         _room.ActiveSpeakersChanged += SpeakerChanged;
+        _room.TrackMuted += OnTrackMuted;
         await _livekitService.ConnectMicrophone();
+    }
+
+    private void OnTrackMuted(object? sender, TrackMutedEventArgs e)
+    {
+        var roomParticipant =
+            RoomParticipants.FirstOrDefault(roomParticipant => roomParticipant.UserId == e.Participant.Identity);
+
+        if (roomParticipant == null)
+        {
+            roomParticipant = new RoomParticipant
+            {
+                UserId = e.Participant.Identity,
+                Username = e.Participant.Name
+            };
+            RoomParticipants.Add(roomParticipant);
+        }
+
+        if (e.Publication.Track is RemoteVideoTrack _)
+        {
+            Task.Run(async () =>
+            {
+                await Task.Delay(250);
+                roomParticipant.ClearVideoStream();
+            });
+        }
     }
 
     public async Task LeaveRoom()
@@ -141,59 +168,62 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
 
-    private async void TrackSubscribed(object? sender, TrackSubscribedEventArgs e)
+    private async void TrackSubscribed(object? sender, TrackSubscribedEventArgs eventArgs)
     {
-        Console.WriteLine("TrackSubscribed");
-
-        var roomParticipant =
-            RoomParticipants.FirstOrDefault(roomParticipant => roomParticipant.UserId == e.Participant.Identity);
-
-        if (roomParticipant == null)
+        try
         {
-            roomParticipant = new RoomParticipant
+            var roomParticipant =
+                RoomParticipants.FirstOrDefault(roomParticipant =>
+                    roomParticipant.UserId == eventArgs.Participant.Identity);
+
+            if (roomParticipant == null)
             {
-                UserId = e.Participant.Identity,
-                Username = e.Participant.Name
-            };
-            RoomParticipants.Add(roomParticipant);
-        }
+                roomParticipant = new RoomParticipant
+                {
+                    UserId = eventArgs.Participant.Identity,
+                    Username = eventArgs.Participant.Name
+                };
+                RoomParticipants.Add(roomParticipant);
+            }
 
-        //TODO: Check for user stop streaming
-
-        if (e.Track is RemoteVideoTrack videoTrack)
-        {
-            //Todo: Move to Class method
-            await using var videoStream = new VideoStream(videoTrack);
-
-            await foreach (var frame in videoStream.WithCancellation(CancellationToken.None))
+            //TODO: Check for user stop streaming
+            if (eventArgs.Track is RemoteVideoTrack videoTrack)
             {
-                roomParticipant.VideoStream =
-                    _videoConverter.I420ToBitmap(frame.Frame.DataBytes, frame.Frame.Width, frame.Frame.Height);
+                await using var videoStream = new VideoStream(videoTrack);
+
+                await foreach (var frame in videoStream.WithCancellation(CancellationToken.None))
+                {
+                    roomParticipant.VideoStream =
+                        _videoConverter.I420ToBitmap(frame.Frame.DataBytes, frame.Frame.Width, frame.Frame.Height);
+                }
+            }
+
+            if (eventArgs.Track is RemoteAudioTrack audioTrack)
+            {
+                await using var audioStream = new AudioStream(audioTrack);
+
+                var sampleRate = (int)audioStream.SampleRate;
+                var channels = (int)audioStream.NumChannels;
+                var waveFormat = new WaveFormat(sampleRate, channels);
+                var bufferedWaveProvider = new BufferedWaveProvider(waveFormat)
+                {
+                    DiscardOnBufferOverflow = true
+                };
+
+                var waveOut = new WaveOutEvent();
+                waveOut.Init(bufferedWaveProvider);
+
+                waveOut.Play();
+
+                await foreach (var frame in audioStream.WithCancellation(CancellationToken.None))
+                {
+                    bufferedWaveProvider.AddSamples(frame.Frame.DataBytes, 0, frame.Frame.DataBytes.Length);
+                }
             }
         }
-
-        if (e.Track is RemoteAudioTrack audioTrack)
+        catch (Exception e)
         {
-            //TODO: Move this it class method
-            await using var audioStream = new AudioStream(audioTrack);
-
-            var sampleRate = (int)48000;
-            var channels = 1;
-            var waveFormat = new WaveFormat(sampleRate, channels);
-            var bufferedWaveProvider = new BufferedWaveProvider(waveFormat)
-            {
-                DiscardOnBufferOverflow = true
-            };
-
-            var waveOut = new WaveOutEvent();
-            waveOut.Init(bufferedWaveProvider);
-
-            waveOut.Play();
-
-            await foreach (var frame in audioStream.WithCancellation(CancellationToken.None))
-            {
-                bufferedWaveProvider.AddSamples(frame.Frame.DataBytes, 0, frame.Frame.DataBytes.Length);
-            }
+            Console.WriteLine($"{e.Message} - {e.StackTrace}");
         }
     }
 
@@ -206,18 +236,18 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public void Play()
-    {
-        if (Design.IsDesignMode)
-        {
-            return;
-        }
-
-        if (Media != null)
-        {
-            MediaPlayer.Play(Media);
-        }
-    }
+    // public void Play()
+    // {
+    //     if (Design.IsDesignMode)
+    //     {
+    //         return;
+    //     }
+    //
+    //     if (Media != null)
+    //     {
+    //         MediaPlayer.Play(Media);
+    //     }
+    // }
 
     public void Stop()
     {

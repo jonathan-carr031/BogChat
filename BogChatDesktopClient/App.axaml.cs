@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -10,6 +11,7 @@ using BogChatDesktopClient.Views;
 
 namespace BogChatDesktopClient;
 
+[SupportedOSPlatform("windows")]
 public class App : Application
 {
     public override void Initialize()

@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Google.Protobuf.Collections;
 using LiveKit.Rtc;
 using Livekit.Server.Sdk.Dotnet;
 using Room = LiveKit.Rtc.Room;
@@ -19,6 +20,7 @@ public class LiveKitService
     private const string ApiSecret = "grK2qDGUOc4ylMGt2Jx4KYHFHnnzoCsDOXpKSh7nPnJ";
 
     private readonly AudioHandler _audioHandler;
+    private readonly RoomServiceClient _roomServiceClient = new(LiveKitUrl, ApiKey, ApiSecret);
 
     private bool _isMuted;
     private AudioSource _microphoneAudioSource;
@@ -118,21 +120,16 @@ public class LiveKitService
         _username = username;
     }
 
-    public async Task<RepeatedField<ParticipantInfo>> GetRoomParticipants(string roomName)
+    public async Task<List<ParticipantInfo>> GetRoomParticipants(string roomName)
     {
-        var roomClient = new RoomServiceClient(LiveKitUrl, ApiKey, ApiSecret);
-
         var request = new ListParticipantsRequest
         {
             Room = roomName
         };
-        var response = await roomClient.ListParticipants(request);
+        var response = await _roomServiceClient.ListParticipants(request);
+        var peopleList = response.Participants.ToList();
 
-        foreach (var participant in response.Participants)
-        {
-            Console.WriteLine($"Name: {participant.Name}, Identity: {participant.Identity}");
-        }
-
-        return response.Participants;
+        peopleList.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+        return peopleList;
     }
 }

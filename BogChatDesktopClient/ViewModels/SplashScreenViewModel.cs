@@ -5,7 +5,7 @@ using Updatum;
 
 namespace BogChatDesktopClient.ViewModels;
 
-internal partial class SplashScreenViewModel : ViewModelBase
+internal class SplashScreenViewModel : ViewModelBase
 {
     private static readonly UpdatumManager AppUpdater = new("jonathan-carr031", "BogChat")
     {
@@ -13,14 +13,14 @@ internal partial class SplashScreenViewModel : ViewModelBase
         InstallUpdateWindowsInstallerArguments = "/qb" // Displays a basic user interface for MSI package
     };
 
-    private CancellationTokenSource _cancellationTokenSource = new();
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     private bool _isUpdateAvailable;
     private string _startUpMessage = string.Empty;
 
     public string StartupMessage
     {
-        get { return _startUpMessage; }
+        get => _startUpMessage;
         set
         {
             _startUpMessage = value;
@@ -28,12 +28,12 @@ internal partial class SplashScreenViewModel : ViewModelBase
         }
     }
 
-    public CancellationToken CancellationToken => _cancellationTokenSource.Token;
+    private CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
-    public void Cancel()
-    {
-        _cancellationTokenSource.Cancel();
-    }
+    // public void Cancel()
+    // {
+    //     _cancellationTokenSource.Cancel();
+    // }
 
     public async Task CheckForUpdates()
     {
@@ -42,7 +42,7 @@ internal partial class SplashScreenViewModel : ViewModelBase
             _isUpdateAvailable = await AppUpdater.CheckForUpdatesAsync();
             if (!_isUpdateAvailable) return;
 
-            var downloadedAsset = await AppUpdater.DownloadUpdateAsync();
+            var downloadedAsset = await AppUpdater.DownloadUpdateAsync(cancellationToken: CancellationToken);
 
             if (downloadedAsset == null) return;
 

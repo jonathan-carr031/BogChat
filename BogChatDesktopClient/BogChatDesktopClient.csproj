@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <includeSourceRevisionInInformationalVersion>false</includeSourceRevisionInInformationalVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -15,7 +16,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AuthentikSharp" Version="1.0.3" />
+        <PackageReference Include="AuthentikSharp" Version="1.0.3"/>
         <PackageReference Include="Avalonia" Version="12.0.1"/>
         <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="12.0.0"/>
         <PackageReference Include="Avalonia.Desktop" Version="12.0.1"/>
@@ -25,13 +26,13 @@
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2"/>
         <PackageReference Include="Emgu.CV.Bitmap" Version="4.13.0.5924"/>
         <PackageReference Include="LibVLCSharp.Avalonia" Version="3.9.7.1"/>
-        <PackageReference Include="LiveKit.AspNetCore.ServerSdk" Version="2.1.5" />
-        <PackageReference Include="Livekit.Rtc.Dotnet" Version="0.1.2" />
-        <PackageReference Include="Livekit.Server.Sdk.Dotnet" Version="1.2.1" />
-        <PackageReference Include="NAudio" Version="2.3.0" />
+        <PackageReference Include="LiveKit.AspNetCore.ServerSdk" Version="2.1.5"/>
+        <PackageReference Include="Livekit.Rtc.Dotnet" Version="0.1.2"/>
+        <PackageReference Include="Livekit.Server.Sdk.Dotnet" Version="1.2.1"/>
+        <PackageReference Include="NAudio" Version="2.3.0"/>
         <PackageReference Include="Updatum" Version="1.3.7"/>
         <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1"/>
     </ItemGroup>

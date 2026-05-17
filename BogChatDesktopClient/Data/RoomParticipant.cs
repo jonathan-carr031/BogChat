@@ -1,5 +1,7 @@
-﻿using Avalonia.Media;
+﻿using Avalonia;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BogChatDesktopClient.Data;
@@ -8,9 +10,8 @@ public class RoomParticipant : ObservableObject
 {
     private IBrush? _borderColor;
 
-    private string _speakingIndicator;
     private Bitmap? _videoStream;
-    public string? UserId { get; set; }
+    public string? UserId { get; init; }
     public string? Username { get; set; }
 
     public Bitmap? VideoStream
@@ -31,5 +32,16 @@ public class RoomParticipant : ObservableObject
             _borderColor = value;
             OnPropertyChanged();
         }
+    }
+
+    private static Bitmap EmptyBitmap => new WriteableBitmap(
+        new PixelSize(200, 200),
+        new Vector(96, 96),
+        PixelFormat.Bgra8888,
+        AlphaFormat.Premul);
+
+    public void ClearVideoStream()
+    {
+        VideoStream = EmptyBitmap;
     }
 }
