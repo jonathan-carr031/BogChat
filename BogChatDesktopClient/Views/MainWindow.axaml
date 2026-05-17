@@ -26,11 +26,31 @@
                              Width="100">
                     </TextBox>
 
-                    <Button Margin="0 6"
-                            Command="{Binding JoinRoom}">
-                        Join The Bog
-                    </Button>
-                    <Button Command="{Binding LeaveRoom}">Leave The Bog</Button>
+                    <Button Name="JoinRoomButton"
+                            Content="Join The Bog"
+                            Margin="0 6"
+                            Click="JoinRoom"
+                            Command="{Binding JoinRoom}" />
+                    <Button Name="LeaveRoomButton"
+                            Content="Leave The Bog"
+                            Margin="0 6"
+                            Click="LeaveRoom"
+                            IsVisible="False"
+                            Command="{Binding LeaveRoom}" />
+                    <ItemsRepeater ItemsSource="{Binding RoomPeople}">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,10,0,0"
+                                        CornerRadius="5"
+                                        BorderBrush="Black" BorderThickness="1"
+                                        Padding="5">
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock Text="{Binding}"></TextBlock>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
                 </StackPanel>
             </Border>
             <StackPanel Name="ContentPanel">
@@ -48,25 +68,25 @@
                 <!-- <Button Click="RecordMic">RecordMic</Button> -->
                 <!-- <Button Click="StopRecording">StopRecording</Button> -->
 
-                <!-- <Panel DockPanel.Dock="Right"> -->
-                <!--     <ItemsRepeater ItemsSource="{Binding StreamableItems}"> -->
-                <!--         <ItemsRepeater.ItemTemplate> -->
-                <!--             <DataTemplate> -->
-                <!--                 <Border Margin="0,10,0,0" -->
-                <!--                         CornerRadius="5" -->
-                <!--                         BorderBrush="Black" BorderThickness="1" -->
-                <!--                         Padding="5"> -->
-                <!--                     <StackPanel Orientation="Horizontal"> -->
-                <!--                         <Button -->
-                <!--                             Command="{Binding $parent[ItemsRepeater].((viewModels:MainWindowViewModel)DataContext).StreamableItemClickEvent}" -->
-                <!--                             CommandParameter="{Binding}" -->
-                <!--                             Content="{Binding WindowTitle}" /> -->
-                <!--                     </StackPanel> -->
-                <!--                 </Border> -->
-                <!--             </DataTemplate> -->
-                <!--         </ItemsRepeater.ItemTemplate> -->
-                <!--     </ItemsRepeater> -->
-                <!-- </Panel> -->
+                <Panel DockPanel.Dock="Right">
+                    <ItemsRepeater ItemsSource="{Binding StreamableItems}">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,10,0,0"
+                                        CornerRadius="5"
+                                        BorderBrush="Black" BorderThickness="1"
+                                        Padding="5">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button
+                                            Command="{Binding $parent[ItemsRepeater].((viewModels:MainWindowViewModel)DataContext).StreamableItemClickEvent}"
+                                            CommandParameter="{Binding}"
+                                            Content="{Binding WindowTitle}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </Panel>
             </StackPanel>
         </StackPanel>
     </Panel>

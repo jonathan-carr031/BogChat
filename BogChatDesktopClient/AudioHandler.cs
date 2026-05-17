@@ -7,6 +7,9 @@ namespace BogChatDesktopClient;
 //TODO: Implement IDisposable?
 public class AudioHandler : IDisposable
 {
+    private const int SampleRate = 14400;
+    private const int Channels = 1;
+
     private readonly IWaveIn _captureDevice;
     private readonly WaveOutEvent? _waveOutEvent;
 
@@ -55,11 +58,10 @@ public class AudioHandler : IDisposable
     {
         var waveInEvent = new WaveInEvent
         {
-            DeviceNumber = 1,
+            DeviceNumber = -1,
         };
-        var sampleRate = (int)14400;
-        var channels = 1;
-        waveInEvent.WaveFormat = new WaveFormat(sampleRate, channels);
+
+        waveInEvent.WaveFormat = new WaveFormat(SampleRate, Channels);
 
         waveInEvent.DataAvailable += OnDataAvailable;
         waveInEvent.RecordingStopped += OnRecordingStopped;

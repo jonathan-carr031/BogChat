@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
+using Google.Protobuf.Collections;
 using LiveKit.Rtc;
 using Livekit.Server.Sdk.Dotnet;
 using Room = LiveKit.Rtc.Room;
@@ -115,5 +116,23 @@ public class LiveKitService
     public void SetUsername(string username)
     {
         _username = username;
+    }
+
+    public async Task<RepeatedField<ParticipantInfo>> GetRoomParticipants(string roomName)
+    {
+        var roomClient = new RoomServiceClient(LiveKitUrl, ApiKey, ApiSecret);
+
+        var request = new ListParticipantsRequest
+        {
+            Room = roomName
+        };
+        var response = await roomClient.ListParticipants(request);
+
+        foreach (var participant in response.Participants)
+        {
+            Console.WriteLine($"Name: {participant.Name}, Identity: {participant.Identity}");
+        }
+
+        return response.Participants;
     }
 }

@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Services;
 using LibVLCSharp.Shared;
@@ -21,21 +22,21 @@ namespace BogChatDesktopClient.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase, IDisposable
 {
-    private readonly ApplicationAudioCapture _audioCapture = new();
+    // private readonly ApplicationAudioCapture _audioCapture = new();
 
     private readonly LibVLC _libVlc = new();
     private readonly LiveKitService _livekitService = new();
 
-    private readonly string _outputFolder;
     private readonly VideoConverterService _videoConverter = new();
 
     private MemoryStream _memoryStream = new();
     private Room? _room;
 
-    private string _username;
-    // private StreamMediaInput _streamMediaInput;
+    // private WaveOutEvent _waveOut;
 
-    private WaveOutEvent _waveOut;
+    private DispatcherTimer _timer;
+
+    private string _username;
 
     public MainWindowViewModel()
     {
@@ -46,8 +47,14 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         GetStreamableItems();
 
-        _outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "SampleImages");
-        Directory.CreateDirectory(_outputFolder);
+        _ = GetRoomParticipants("room-name");
+
+        _timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(5)
+        };
+        _timer.Tick += (sender, e) => { _ = GetRoomParticipants("room-name"); };
+        _timer.Start();
     }
 
     public Media? Media { get; set; }
@@ -55,6 +62,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public MediaPlayer MediaPlayer { get; }
 
     public ObservableCollection<StreamableItem> StreamableItems { get; set; }
+    public ObservableCollection<RoomParticipant> RoomParticipants { get; set; }
+    public ObservableCollection<string?> RoomPeople { get; set; } = [];
 
     public string Username
     {
@@ -66,17 +75,46 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public ObservableCollection<RoomParticipant> RoomParticipants { get; set; }
-
     public void Dispose()
     {
-        MediaPlayer?.Dispose();
-        _libVlc?.Dispose();
+        MediaPlayer.Dispose();
+        _libVlc.Dispose();
+        _timer.Stop();
     }
+
+    private async Task GetRoomParticipants(string roomName)
+    {
+        var participants = await _livekitService.GetRoomParticipants("room-name");
+
+        RoomPeople.Clear();
+
+        foreach (var participantInfo in participants)
+        {
+            RoomPeople.Add(participantInfo.Name);
+        }
+    }
+
+    public async Task JoinRoom()
+    {
+        _livekitService.SetUsername(Username);
+        _room = await _livekitService.JoinRoom("room-name");
+        _room.TrackSubscribed += TrackSubscribed;
+        _room.ActiveSpeakersChanged += SpeakerChanged;
+        await _livekitService.ConnectMicrophone();
+    }
+
+    public async Task LeaveRoom()
+    {
+        await _livekitService.LeaveRoom();
+        await _memoryStream.DisposeAsync();
+
+        RoomParticipants.Clear();
+    }
+
 
     private void GetStreamableItems()
     {
-        var processes = Process.GetProcesses().Where((process) => !string.IsNullOrEmpty(process.MainWindowTitle));
+        var processes = Process.GetProcesses().Where(process => !string.IsNullOrEmpty(process.MainWindowTitle));
         var regex = new Regex(@"[^A-Za-z0-9'\s]+");
 
         foreach (var process in processes)
@@ -102,22 +140,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public async Task JoinRoom()
-    {
-        _livekitService.SetUsername(Username);
-        _room = await _livekitService.JoinRoom("room-name");
-        _room.TrackSubscribed += TrackSubscribed;
-        _room.ActiveSpeakersChanged += SpeakerChanged;
-        await _livekitService.ConnectMicrophone();
-    }
-
-    public async Task LeaveRoom()
-    {
-        await _livekitService.LeaveRoom();
-        await _memoryStream.DisposeAsync();
-
-        RoomParticipants.Clear();
-    }
 
     private async void TrackSubscribed(object? sender, TrackSubscribedEventArgs e)
     {
@@ -140,6 +162,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         if (e.Track is RemoteVideoTrack videoTrack)
         {
+            //Todo: Move to Class method
             await using var videoStream = new VideoStream(videoTrack);
 
             await foreach (var frame in videoStream.WithCancellation(CancellationToken.None))
@@ -151,6 +174,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         if (e.Track is RemoteAudioTrack audioTrack)
         {
+            //TODO: Move this it class method
             await using var audioStream = new AudioStream(audioTrack);
 
             var sampleRate = (int)48000;
