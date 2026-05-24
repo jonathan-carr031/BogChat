@@ -8,7 +8,6 @@ using BogChatDesktopClient.ScreenCapture;
 using LiveKit.Proto;
 using LiveKit.Rtc;
 using Livekit.Server.Sdk.Dotnet;
-using ScreenRecorderLib;
 using ListParticipantsRequest = Livekit.Server.Sdk.Dotnet.ListParticipantsRequest;
 using ParticipantInfo = Livekit.Server.Sdk.Dotnet.ParticipantInfo;
 using Room = LiveKit.Rtc.Room;
@@ -150,7 +149,7 @@ public class LiveKitService
 
                 using var memoryStream = new MemoryStream();
                 memoryStream.Write(data, 0, data.Length);
-                OnFrameReceived(memoryStream, 2560, 1440, new FrameRecordedEventArgs());
+                OnFrameReceived(memoryStream, 2560, 1440);
             }
         };
 
@@ -162,7 +161,7 @@ public class LiveKitService
         _screenCapture.StopCapture();
     }
 
-    private void OnFrameReceived(MemoryStream memoryStream, int width, int height, FrameRecordedEventArgs args)
+    private void OnFrameReceived(MemoryStream memoryStream, int width, int height)
     {
         var frames = memoryStream.GetBuffer();
         if (frames.Length != 0)
