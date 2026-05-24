@@ -3,14 +3,29 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.Versioning;
+using Avalonia;
+using Avalonia.Platform;
+using LiveKit.Proto;
+using LiveKit.Rtc;
 using Bitmap = Avalonia.Media.Imaging.Bitmap;
+using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace BogChatDesktopClient.Services;
 
 [SupportedOSPlatform("windows")]
-public class VideoConverterService
+public static class VideoConverterService
 {
-    public Bitmap I420ToBitmap(byte[] data, int width, int height)
+    public static Bitmap ConvertToBitmap(VideoFrame frame)
+    {
+        return frame.Type switch
+        {
+            VideoBufferType.I420 => I420ToBitmap(frame.DataBytes, frame.Width, frame.Height),
+            _ => new Bitmap(Avalonia.Platform.PixelFormat.Rgba8888, AlphaFormat.Opaque, IntPtr.Zero, PixelSize.Empty,
+                Vector.Zero, 0)
+        };
+    }
+
+    private static Bitmap I420ToBitmap(byte[] data, int width, int height)
     {
         var bitmap = new System.Drawing.Bitmap(width, height, PixelFormat.Format32bppArgb);
         var bitmapData =
@@ -61,9 +76,6 @@ public class VideoConverterService
         bitmap.Save(memory, ImageFormat.Jpeg);
         memory.Position = 0;
 
-        //AvIrBitmap is our new Avalonia compatible image. You can pass this to your view
-        var avaloniaBitmap = new Bitmap(memory);
-
-        return avaloniaBitmap;
+        return new Bitmap(memory);
     }
 }

@@ -17,8 +17,8 @@
                 ClipToBounds="True">
             <Panel>
                 <Image Name="DisplayImage"
-                       Width="300"
-                       Height="169"
+                       Width="600"
+                       Height="338"
                        Stretch="Fill"
                        Source="{Binding VideoStream}" />
 

@@ -49,4 +49,16 @@ public partial class MainWindow : Window
         JoinRoomButton.IsVisible = true;
         LeaveRoomButton.IsVisible = false;
     }
+
+    private void StartStreaming(object? sender, RoutedEventArgs e)
+    {
+        StartStreamButton.IsVisible = false;
+        StopStreamButton.IsVisible = true;
+    }
+
+    private void StopStreaming(object? sender, RoutedEventArgs e)
+    {
+        StartStreamButton.IsVisible = true;
+        StopStreamButton.IsVisible = false;
+    }
 }

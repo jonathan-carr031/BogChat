@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Media;
 using Avalonia.Threading;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Services;
-using LibVLCSharp.Shared;
 using LiveKit.Rtc;
 using NAudio.Wave;
+using Bitmap = Avalonia.Media.Imaging.Bitmap;
+using Brush = Avalonia.Media.Brush;
+using Brushes = Avalonia.Media.Brushes;
 using Room = LiveKit.Rtc.Room;
 using VideoStream = LiveKit.Rtc.VideoStream;
 
@@ -23,26 +25,25 @@ namespace BogChatDesktopClient.ViewModels;
 [SupportedOSPlatform("windows")]
 public class MainWindowViewModel : ViewModelBase, IDisposable
 {
-    // private readonly ApplicationAudioCapture _audioCapture = new();
+    private readonly Rectangle _captureArea = new(0, 0, 2560, 1440);
 
-    private readonly LibVLC _libVlc = new();
+    // private readonly ApplicationAudioCapture _audioCapture = new();
     private readonly LiveKitService _livekitService = new();
 
     private readonly MemoryStream _memoryStream = new();
 
-    // private WaveOutEvent _waveOut;
-
     private readonly DispatcherTimer _timer;
 
-    private readonly VideoConverterService _videoConverter = new();
     private Room? _room;
 
+    private Bitmap _streamPreview;
+
     private string? _username;
+    private ApplicationVideoCapture _videoCapture = new();
 
     public MainWindowViewModel()
     {
         RoomParticipants = [];
-        MediaPlayer = new MediaPlayer(_libVlc);
 
         StreamableItems = [];
 
@@ -58,13 +59,19 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _timer.Start();
     }
 
-    // public Media? Media { get; }
-
-    public MediaPlayer MediaPlayer { get; }
-
     public ObservableCollection<StreamableItem> StreamableItems { get; set; }
     public ObservableCollection<RoomParticipant> RoomParticipants { get; set; }
     public ObservableCollection<string?> RoomPeople { get; set; } = [];
+
+    public Bitmap StreamPreview
+    {
+        get => _streamPreview;
+        set
+        {
+            _streamPreview = value;
+            OnPropertyChanged();
+        }
+    }
 
     public string? Username
     {
@@ -78,8 +85,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
-        MediaPlayer.Dispose();
-        _libVlc.Dispose();
         _timer.Stop();
     }
 
@@ -138,7 +143,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         RoomParticipants.Clear();
     }
 
-
     private void GetStreamableItems()
     {
         var processes = Process.GetProcesses().Where(process => !string.IsNullOrEmpty(process.MainWindowTitle));
@@ -151,6 +155,16 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
             StreamableItems.Add(new StreamableItem(process.Id, regex.Replace(process.MainWindowTitle, "")));
         }
+    }
+
+    public async Task RecordApplication()
+    {
+        await _livekitService.InitializeVideoSource();
+    }
+
+    public async Task StopStreaming()
+    {
+        await _livekitService.StopStreaming();
     }
 
     public async Task StreamableItemClickEvent(StreamableItem item)
@@ -166,7 +180,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             ApplicationAudioCapture.StopApplicationAudio();
         }
     }
-
 
     private async void TrackSubscribed(object? sender, TrackSubscribedEventArgs eventArgs)
     {
@@ -193,8 +206,10 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
                 await foreach (var frame in videoStream.WithCancellation(CancellationToken.None))
                 {
-                    roomParticipant.VideoStream =
-                        _videoConverter.I420ToBitmap(frame.Frame.DataBytes, frame.Frame.Width, frame.Frame.Height);
+                    roomParticipant.VideoStream = VideoConverterService.ConvertToBitmap(frame.Frame);
+                    // roomParticipant.VideoStream =
+                    //     VideoConverterService.I420ToBitmap(frame.Frame.DataBytes, frame.Frame.Width,
+                    //         frame.Frame.Height);
                 }
             }
 
@@ -234,23 +249,5 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             var isSpeaking = e.Speakers.FirstOrDefault(speaker => speaker.Identity == participant.UserId) != null;
             participant.BorderColor = isSpeaking ? Brush.Parse("#44FF33") : Brushes.Transparent;
         }
-    }
-
-    // public void Play()
-    // {
-    //     if (Design.IsDesignMode)
-    //     {
-    //         return;
-    //     }
-    //
-    //     if (Media != null)
-    //     {
-    //         MediaPlayer.Play(Media);
-    //     }
-    // }
-
-    public void Stop()
-    {
-        MediaPlayer.Stop();
     }
 }

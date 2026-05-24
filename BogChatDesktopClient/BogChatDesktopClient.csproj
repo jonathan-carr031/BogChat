@@ -1,18 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
+        <!--        <TargetFramework>net9.0</TargetFramework>-->
+        <TargetFramework>net9.0-windows10.0.22621.0</TargetFramework>
+        <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <includeSourceRevisionInInformationalVersion>false</includeSourceRevisionInInformationalVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Release;Debug</Configurations>
+        <Platforms>x64</Platforms>
+        <ApplicationIcon>Assets\Images\icon.ico</ApplicationIcon>
+        <AssemblyVersion>99.99</AssemblyVersion>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
+
+    <PropertyGroup>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     </PropertyGroup>
 
     <ItemGroup>
@@ -28,17 +32,18 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2"/>
         <PackageReference Include="Emgu.CV.Bitmap" Version="4.13.0.5924"/>
-        <PackageReference Include="LibVLCSharp.Avalonia" Version="3.9.7.1"/>
         <PackageReference Include="LiveKit.AspNetCore.ServerSdk" Version="2.1.5"/>
         <PackageReference Include="Livekit.Rtc.Dotnet" Version="0.1.2"/>
         <PackageReference Include="Livekit.Server.Sdk.Dotnet" Version="1.2.1"/>
         <PackageReference Include="NAudio" Version="2.3.0"/>
+        <PackageReference Include="ScreenRecorderLib" Version="6.6.0"/>
+        <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0"/>
         <PackageReference Include="Updatum" Version="1.3.7"/>
-        <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1"/>
     </ItemGroup>
 
     <ItemGroup>
         <Folder Include="Assets\Audio\"/>
+        <Folder Include="AudioCapture\"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -10,10 +10,10 @@ public class AudioHandler : IDisposable
     private const int Channels = 1;
 
     private readonly IWaveIn _captureDevice;
+    private readonly string _outputFilename;
+    private readonly string _outputFolder;
 
     private bool _isMicrophoneOn;
-    private string _outputFilename;
-    private string _outputFolder;
     private WaveFileWriter? _writer;
 
     private bool _writeToFile;
@@ -23,6 +23,10 @@ public class AudioHandler : IDisposable
     public AudioHandler()
     {
         _captureDevice = InitializeWaveIn();
+
+        _outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "NAudioDemo");
+        Directory.CreateDirectory(_outputFolder);
+        _outputFilename = Path.Combine(_outputFolder, $"NAudioDemo_{DateTime.Now:yyy-MM-dd HH-mm-ss}.wav");
     }
 
     public IWaveIn WaveIn => _captureDevice;
@@ -36,9 +40,6 @@ public class AudioHandler : IDisposable
 
     private void InitializeRecordingOutput()
     {
-        _outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "NAudioDemo");
-        Directory.CreateDirectory(_outputFolder);
-        _outputFilename = Path.Combine(_outputFolder, $"NAudioDemo_{DateTime.Now:yyy-MM-dd HH-mm-ss}.wav");
         _writer = new WaveFileWriter(Path.Combine(_outputFolder, _outputFilename), _captureDevice.WaveFormat);
     }
 

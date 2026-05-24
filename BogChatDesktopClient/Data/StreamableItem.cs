@@ -1,13 +1,7 @@
-﻿namespace BogChatDesktopClient;
+﻿namespace BogChatDesktopClient.Data;
 
-public class StreamableItem
+public class StreamableItem(int processId, string windowTitle)
 {
-    public StreamableItem(int processId, string windowTitle)
-    {
-        ProcessId = processId;
-        WindowTitle = windowTitle;
-    }
-
-    public int ProcessId { get; set; }
-    public string WindowTitle { get; set; }
+    public int ProcessId { get; set; } = processId;
+    public string WindowTitle { get; set; } = windowTitle;
 }

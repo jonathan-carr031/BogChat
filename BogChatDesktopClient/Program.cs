@@ -1,8 +1,10 @@
-﻿using Avalonia;
-using System;
+﻿using System;
+using System.Runtime.Versioning;
+using Avalonia;
 
 namespace BogChatDesktopClient;
 
+[SupportedOSPlatform("windows")]
 class Program
 {
     // Initialization code. Don't use any Avalonia, third-party APIs or any
@@ -13,7 +15,7 @@ class Program
         .StartWithClassicDesktopLifetime(args);
 
     // Avalonia configuration, don't remove; also used by visual designer.
-    public static AppBuilder BuildAvaloniaApp()
+    private static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
 #if DEBUG

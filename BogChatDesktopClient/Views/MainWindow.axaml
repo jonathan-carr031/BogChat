@@ -13,7 +13,8 @@
         <StyleInclude Source="/Styles/UserCardStyles.axaml" />
     </Window.Styles>
 
-    <Panel Margin="6">
+    <Panel Margin="6"
+           HorizontalAlignment="Stretch">
         <StackPanel
             Orientation="Horizontal"
             Background="#1f1f1f">
@@ -53,23 +54,48 @@
                     </ItemsRepeater>
                 </StackPanel>
             </Border>
-            <StackPanel Name="ContentPanel">
-                <ItemsRepeater ItemsSource="{Binding RoomParticipants}">
-                    <ItemsRepeater.ItemTemplate>
-                        <DataTemplate>
-                            <UserCard Margin="20"
-                                      RoomParticipant="{Binding}" />
-                        </DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
+            <DockPanel Name="ContentPanel">
+                <StackPanel Orientation="Vertical">
+                    <ItemsRepeater ItemsSource="{Binding RoomParticipants}">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                                <UserCard Margin="20"
+                                          RoomParticipant="{Binding}" />
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
 
-                <Button Click="Mute">Mute</Button>
-                <Button Click="UnMute">UnMute</Button>
+                    <Border CornerRadius="8"
+                            ClipToBounds="True"
+                            BorderBrush="#FF00FF"
+                            BorderThickness="4"
+                            Background="#131313">
+                        <Border CornerRadius="12"
+                                ClipToBounds="True">
+                            <Panel>
+                                <Image Name="DisplayImage"
+                                       Width="600"
+                                       Height="338"
+                                       Stretch="Fill"
+                                       Source="{Binding StreamPreview}" />
 
-                <TextBlock Name="VersionNumber" Text="No Version Set"></TextBlock>
-                <!-- <Button Click="RecordMic">RecordMic</Button> -->
-                <!-- <Button Click="StopRecording">StopRecording</Button> -->
+                                <TextBlock Text="Stream Preview" Margin="20"></TextBlock>
+                            </Panel>
+                        </Border>
+                    </Border>
 
+                    <Button Click="Mute">Mute</Button>
+                    <Button Click="UnMute">UnMute</Button>
+                    <Button Name="StartStreamButton" Click="StartStreaming" Command="{Binding RecordApplication}">Stream Screen</Button>
+                    <Button Name="StopStreamButton" Click="StopStreaming" Command="{Binding StopStreaming}"
+                            IsVisible="False">
+                        Stop Streaming
+                    </Button>
+
+                    <TextBlock Name="VersionNumber" Text="No Version Set"></TextBlock>
+                    <!-- <Button Click="RecordMic">RecordMic</Button> -->
+                    <!-- <Button Click="StopRecording">StopRecording</Button> -->
+                </StackPanel>
                 <Panel DockPanel.Dock="Right">
                     <ItemsRepeater ItemsSource="{Binding StreamableItems}">
                         <ItemsRepeater.ItemTemplate>
@@ -89,7 +115,7 @@
                         </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
                 </Panel>
-            </StackPanel>
+            </DockPanel>
         </StackPanel>
     </Panel>
 </Window>

@@ -11,12 +11,15 @@ public class ViewLocator : IDataTemplate
 
     public Control Build(object? data)
     {
-        var name = data.GetType().FullName?.Replace("ViewModel", "View");
-        var type = Type.GetType(name);
-
-        if (type != null)
+        var name = data?.GetType().FullName?.Replace("ViewModel", "View");
+        if (name != null)
         {
-            return (Control)Activator.CreateInstance(type)!;
+            var type = Type.GetType(name);
+
+            if (type != null)
+            {
+                return (Control)Activator.CreateInstance(type)!;
+            }
         }
 
         return new TextBlock { Text = "Not Found: " + name };
