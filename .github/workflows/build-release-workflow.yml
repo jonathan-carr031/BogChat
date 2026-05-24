@@ -21,6 +21,8 @@ jobs:
           dotnet-version: 9.0.x
       - name: Restore dependencies
         run: dotnet restore BogChatDesktopClient.sln
+      - name: Build Solution
+        run: dotnet build BogChatDesktopClient.sln
       - name: Get next version
         uses: reecetech/version-increment@2024.10.1
         id: version
