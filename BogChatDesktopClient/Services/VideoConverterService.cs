@@ -13,26 +13,22 @@ using PixelFormat = System.Drawing.Imaging.PixelFormat;
 namespace BogChatDesktopClient.Services;
 
 [SupportedOSPlatform("windows")]
-public static class VideoConverterService
-{
-    public static Bitmap ConvertToBitmap(VideoFrame frame)
-    {
-        return frame.Type switch
-        {
+public static class VideoConverterService {
+    public static Bitmap ConvertToBitmap(VideoFrame frame) {
+        Console.WriteLine($"Video Type: {frame.Type}");
+        return frame.Type switch {
             VideoBufferType.I420 => I420ToBitmap(frame.DataBytes, frame.Width, frame.Height),
             _ => new Bitmap(Avalonia.Platform.PixelFormat.Rgba8888, AlphaFormat.Opaque, IntPtr.Zero, PixelSize.Empty,
                 Vector.Zero, 0)
         };
     }
 
-    private static Bitmap I420ToBitmap(byte[] data, int width, int height)
-    {
+    private static Bitmap I420ToBitmap(byte[] data, int width, int height) {
         var bitmap = new System.Drawing.Bitmap(width, height, PixelFormat.Format32bppArgb);
         var bitmapData =
             bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
 
-        unsafe
-        {
+        unsafe {
             var ptr = (byte*)bitmapData.Scan0;
             var ySize = width * height;
             var uvSize = ySize / 4;
@@ -42,10 +38,8 @@ public static class VideoConverterService
             var uPlane = ySize;
             var vPlane = ySize + uvSize;
 
-            for (var y = 0; y < height; y++)
-            {
-                for (var x = 0; x < width; x++)
-                {
+            for (var y = 0; y < height; y++) {
+                for (var x = 0; x < width; x++) {
                     var yIdx = y * width + x;
                     var uvIdx = (y / 2) * (width / 2) + (x / 2);
 

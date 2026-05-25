@@ -6,29 +6,24 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BogChatDesktopClient.Data;
 
-public class RoomParticipant : ObservableObject
-{
+public class RoomParticipant : ObservableObject {
     private IBrush? _borderColor;
 
     private Bitmap? _videoStream;
     public string? UserId { get; init; }
     public string? Username { get; set; }
 
-    public Bitmap? VideoStream
-    {
+    public Bitmap? VideoStream {
         get => _videoStream;
-        set
-        {
+        set {
             _videoStream = value;
             OnPropertyChanged();
         }
     }
 
-    public IBrush? BorderColor
-    {
+    public IBrush? BorderColor {
         get => _borderColor;
-        set
-        {
+        set {
             _borderColor = value;
             OnPropertyChanged();
         }
@@ -40,8 +35,7 @@ public class RoomParticipant : ObservableObject
         PixelFormat.Bgra8888,
         AlphaFormat.Premul);
 
-    public void ClearVideoStream()
-    {
+    public void ClearVideoStream() {
         VideoStream = EmptyBitmap;
     }
 }

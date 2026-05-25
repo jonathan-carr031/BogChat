@@ -42,7 +42,8 @@
 
     <ItemGroup>
         <Folder Include="Assets\Audio\"/>
-        <Folder Include="AudioCapture\"/>
+        <Folder Include="Extensions\"/>
+        <Folder Include="Features\AudioCapture\"/>
     </ItemGroup>
 
     <ItemGroup>

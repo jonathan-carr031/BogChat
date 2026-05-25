@@ -84,17 +84,26 @@
                         </Border>
                     </Border>
 
-                    <Button Click="Mute">Mute</Button>
-                    <Button Click="UnMute">UnMute</Button>
-                    <Button Name="StartStreamButton" Click="StartStreaming" Command="{Binding RecordApplication}">Stream Screen</Button>
-                    <Button Name="StopStreamButton" Click="StopStreaming" Command="{Binding StopStreaming}"
-                            IsVisible="False">
-                        Stop Streaming
-                    </Button>
+                    <Button Name="MuteButton"
+                            Click="Mute"
+                            Command="{Binding MuteVoice}"
+                            Content="Mute" />
+                    <Button Name="UnmuteButton"
+                            Click="UnMute"
+                            Command="{Binding UnmuteVoice}"
+                            Content="Unmute"
+                            IsVisible="False" />
+                    <Button Name="StartStreamButton"
+                            Click="StartStreaming"
+                            Command="{Binding RecordApplication}"
+                            Content="Stream Screen" />
+                    <Button Name="StopStreamButton"
+                            Click="StopStreaming"
+                            Command="{Binding StopStreaming}"
+                            IsVisible="False"
+                            Content="Stop Streaming" />
 
                     <TextBlock Name="VersionNumber" Text="No Version Set"></TextBlock>
-                    <!-- <Button Click="RecordMic">RecordMic</Button> -->
-                    <!-- <Button Click="StopRecording">StopRecording</Button> -->
                 </StackPanel>
                 <Panel DockPanel.Dock="Right">
                     <ItemsRepeater ItemsSource="{Binding StreamableItems}">

@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BogChatDesktopClient.Features.ScreenCapture;
+using BogChatDesktopClient.Features.ScreenCapture.Models;
 using BogChatDesktopClient.ScreenCapture;
 using LiveKit.Proto;
 using LiveKit.Rtc;
@@ -15,8 +17,7 @@ using RoomOptions = LiveKit.Rtc.RoomOptions;
 
 namespace BogChatDesktopClient.Services;
 
-public class LiveKitService
-{
+public class LiveKitService {
     private const string LiveKitUrl = "wss://bogchat-c8y7wswc.livekit.cloud";
 
     // private const string ApiKey = "devkey";
@@ -44,8 +45,7 @@ public class LiveKitService
     private string _username = "desktop";
     private VideoSource? _videoSource;
 
-    public LiveKitService()
-    {
+    public LiveKitService() {
         _audioHandler = new AudioHandler();
 
         _outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ScreenCapture");
@@ -57,24 +57,20 @@ public class LiveKitService
         _screenCapture = new GpuImageCapture();
     }
 
-    private void GenerateByteArray()
-    {
+    private void GenerateByteArray() {
         var width = 2560;
         var height = 1440;
         var size = (int)(2560 * 1440 * 1.5);
         _data = new byte[size];
 
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
+        for (var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
                 _data[y * width + x] = 125;
             }
         }
     }
 
-    private void OnAudioReceived(byte[] buffer, int bytes)
-    {
+    private void OnAudioReceived(byte[] buffer, int bytes) {
         if (_isMuted) return;
 
         var audioFrame = new AudioFrame(buffer, _audioHandler.WaveIn.WaveFormat.SampleRate,
@@ -82,8 +78,7 @@ public class LiveKitService
         _ = _microphoneAudioSource?.CaptureFrameAsync(audioFrame);
     }
 
-    private string GetAccessToken(string roomName)
-    {
+    private string GetAccessToken(string roomName) {
         var token = new AccessToken(ApiKey, ApiSecret)
             .WithIdentity($"{_username}-identity")
             .WithName(_username)
@@ -93,10 +88,8 @@ public class LiveKitService
         return token.ToJwt();
     }
 
-    public async Task<Room> JoinRoom(string roomName)
-    {
-        if (_room != null)
-        {
+    public async Task<Room> JoinRoom(string roomName) {
+        if (_room != null) {
             await LeaveRoom();
         }
 
@@ -114,8 +107,7 @@ public class LiveKitService
 
         // _room.ActiveSpeakersChanged += (sender, e) => { Console.WriteLine($"Active speakers: {e.Speakers.Count}"); };
 
-        _room.DataReceived += (_, e) =>
-        {
+        _room.DataReceived += (_, e) => {
             var message = Encoding.UTF8.GetString(e.Data);
             Console.WriteLine($"Data from {e.Participant?.Identity}: {message}");
         };
@@ -123,8 +115,7 @@ public class LiveKitService
         return _room;
     }
 
-    public async Task ConnectMicrophone()
-    {
+    public async Task ConnectMicrophone() {
         if (_room == null) return;
         _microphoneAudioSource = InitializeAudioSource();
 
@@ -133,77 +124,57 @@ public class LiveKitService
         _ = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
     }
 
-    public async Task InitializeVideoSource()
-    {
+    public async Task InitializeVideoSource() {
         _videoSource = new VideoSource(2560, 1440);
         var videoTrack = _videoSource.CreateTrack($"{_username}-video");
         var videoPublication = await _room.LocalParticipant.PublishTrackAsync(videoTrack);
         Console.WriteLine($"Published video track: {videoPublication.Sid}\n");
-        _screenCapture = new GpuImageCapture()
-        {
-            ScreenRefreshed = (data) =>
-            {
-                // Console.WriteLine($"Frame Captured: {data.Length}");
-                // File.WriteAllBytes(
-                //     @$"C:\Users\jonat\Desktop\ScreenCapture\screencap_{DateTime.UtcNow:yyyy-MM-dd-hhmmss}.jpg", data);
-
-                using var memoryStream = new MemoryStream();
-                memoryStream.Write(data, 0, data.Length);
-                OnFrameReceived(memoryStream, 2560, 1440);
-            }
+        _screenCapture = new CopyScreenCapture() {
+            ScreenRefreshed = OnFrameReceived
         };
 
         _screenCapture.StartCapture();
     }
 
-    public async Task StopStreaming()
-    {
+    public async Task StopStreaming() {
         _screenCapture.StopCapture();
     }
 
-    private void OnFrameReceived(MemoryStream memoryStream, int width, int height)
-    {
+    private void OnFrameReceived(VideoInfo videoInfo) {
+        using var memoryStream = new MemoryStream();
+        memoryStream.Write(videoInfo.Data, 0, videoInfo.Data.Length);
         var frames = memoryStream.GetBuffer();
-        if (frames.Length != 0)
-        {
-            Console.WriteLine($"Buffer length: {frames.Length}");
-            var videoFrame = new VideoFrame(width, height, VideoBufferType.Rgba, frames);
+        if (frames.Length != 0) {
+            var videoFrame = new VideoFrame(videoInfo.Width, videoInfo.Height, VideoBufferType.Bgra, frames);
             _videoSource?.CaptureFrame(videoFrame);
             memoryStream.Seek(0, SeekOrigin.Begin);
         }
     }
 
-    public void ToggleMute()
-    {
+    public void ToggleMute() {
         _isMuted = !_isMuted;
     }
 
-    private AudioSource InitializeAudioSource()
-    {
+    private AudioSource InitializeAudioSource() {
         _audioHandler.OnDataReceived = OnAudioReceived;
         _audioHandler.StartMicrophone();
         return new AudioSource(_audioHandler.WaveIn.WaveFormat.SampleRate,
             _audioHandler.WaveIn.WaveFormat.Channels);
     }
 
-    public async Task LeaveRoom()
-    {
-        if (_room != null)
-        {
+    public async Task LeaveRoom() {
+        if (_room != null) {
             await _room.DisconnectAsync();
             _room = null;
         }
     }
 
-    public void SetUsername(string username)
-    {
+    public void SetUsername(string username) {
         _username = username;
     }
 
-    public async Task<List<ParticipantInfo>> GetRoomParticipants(string roomName)
-    {
-        var request = new ListParticipantsRequest
-        {
+    public async Task<List<ParticipantInfo>> GetRoomParticipants(string roomName) {
+        var request = new ListParticipantsRequest {
             Room = roomName
         };
         var response = await _roomServiceClient.ListParticipants(request);
