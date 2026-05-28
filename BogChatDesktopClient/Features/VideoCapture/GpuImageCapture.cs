@@ -6,7 +6,8 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using Avalonia.Threading;
-using BogChatDesktopClient.Features.ScreenCapture.Models;
+using BogChatDesktopClient.Features.VideoCapture.Models;
+using BogChatDesktopClient.ScreenCapture;
 using LiveKit.Proto;
 using SharpDX;
 using SharpDX.Direct3D11;
@@ -16,7 +17,7 @@ using MapFlags = SharpDX.Direct3D11.MapFlags;
 using Resource = SharpDX.DXGI.Resource;
 using ResultCode = SharpDX.DXGI.ResultCode;
 
-namespace BogChatDesktopClient.ScreenCapture;
+namespace BogChatDesktopClient.Features.VideoCapture;
 
 public class GpuImageCapture : IScreenCapture {
     private Factory1 _factory;
@@ -24,6 +25,7 @@ public class GpuImageCapture : IScreenCapture {
     private bool _running, _initialized;
     private DispatcherTimer _timer;
 
+    public Rectangle CaptureArea { get; set; }
     public Action<VideoInfo>? ScreenRefreshed { get; set; }
 
     public void StartCapture() {

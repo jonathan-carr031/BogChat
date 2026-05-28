@@ -1,31 +1,22 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewModels="clr-namespace:BogChatDesktopClient.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
-        x:Class="BogChatDesktopClient.Views.MainWindow"
-        x:DataType="viewModels:MainWindowViewModel"
-        Title="BogChatDesktopClient"
-        Background="#1f1f1f">
-
-    <Window.Styles>
-        <StyleInclude Source="/Styles/UserCardStyles.axaml" />
-    </Window.Styles>
-
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:BogChatDesktopClient.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="BogChatDesktopClient.Views.HomePageView"
+             x:DataType="viewModels:HomePageViewModel">
     <Panel Margin="6"
            HorizontalAlignment="Stretch">
-        <!--<StackPanel
-            IsVisible="False"
+        <TextBlock Text="Home Page"></TextBlock>
+        <StackPanel
             Orientation="Horizontal"
             Background="#1f1f1f">
             <Border CornerRadius="3"
                     Background="#31402e">
                 <StackPanel Name="UserPanel"
                             Margin="12">
-                    <TextBlock Text="Username:" Padding="6"></TextBlock>
-                    <TextBox Name="Username" Text="{Binding Username, Mode=TwoWay}"
-                             Width="100" />
+                    <TextBlock Name="Username" Text="{Binding Username}" IsVisible="False"></TextBlock>
 
                     <Button Name="JoinRoomButton"
                             Content="Join The Bog"
@@ -55,7 +46,9 @@
                     </ItemsRepeater>
                 </StackPanel>
             </Border>
-            <DockPanel Name="ContentPanel">
+            <DockPanel Name="ContentPanel"
+                       Margin="12"
+                       IsVisible="False">
                 <StackPanel Orientation="Vertical">
                     <ItemsRepeater ItemsSource="{Binding RoomParticipants}">
                         <ItemsRepeater.ItemTemplate>
@@ -68,19 +61,20 @@
 
                     <Border CornerRadius="8"
                             ClipToBounds="True"
-                            BorderBrush="#FF00FF"
-                            BorderThickness="4"
+                            BorderBrush="#226622"
+                            BorderThickness="1"
                             Background="#131313">
                         <Border CornerRadius="12"
                                 ClipToBounds="True">
                             <Panel>
                                 <Image Name="DisplayImage"
-                                       Width="600"
-                                       Height="338"
+                                       Width="213"
+                                       Height="120"
                                        Stretch="Fill"
+                                       RenderOptions.BitmapInterpolationMode="LowQuality"
                                        Source="{Binding StreamPreview}" />
 
-                                <TextBlock Text="Stream Preview" Margin="20"></TextBlock>
+                                <TextBlock Text="Stream Preview" Margin="12"></TextBlock>
                             </Panel>
                         </Border>
                     </Border>
@@ -116,7 +110,7 @@
                                         Padding="5">
                                     <StackPanel Orientation="Horizontal">
                                         <Button
-                                            Command="{Binding $parent[ItemsRepeater].((viewModels:MainWindowViewModel)DataContext).StreamableItemClickEvent}"
+                                            Command="{Binding $parent[ItemsRepeater].((viewModels:HomePageViewModel)DataContext).StreamableItemClickEvent}"
                                             CommandParameter="{Binding}"
                                             Content="{Binding WindowTitle}" />
                                     </StackPanel>
@@ -126,7 +120,6 @@
                     </ItemsRepeater>
                 </Panel>
             </DockPanel>
-        </StackPanel>-->
-        <ContentControl Content="{Binding CurrentPage}" />
+        </StackPanel>
     </Panel>
-</Window>
+</UserControl>

@@ -8,32 +8,29 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Avalonia.Threading;
-using BogChatDesktopClient.Features.ScreenCapture.Models;
+using BogChatDesktopClient.Features.VideoCapture.Models;
 using BogChatDesktopClient.ScreenCapture;
 using LiveKit.Proto;
 
 namespace BogChatDesktopClient.Features.ScreenCapture;
 
 public class CopyScreenCapture : IScreenCapture {
-    private readonly Rectangle _captureArea;
     private readonly Bitmap _captureBitmap;
 
     private readonly List<double> _frameTimes = [];
-
 
     private readonly string _outputFolder =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ScreenCapture");
 
     private readonly DispatcherTimer _timer;
 
-
     public CopyScreenCapture() : this(Screen.PrimaryScreen != null
         ? Screen.PrimaryScreen.Bounds
         : new Rectangle(0, 0, 1920, 1080)) { }
 
     private CopyScreenCapture(Rectangle captureArea, uint targetFps = 120) {
-        _captureArea = captureArea;
-        _captureBitmap = new Bitmap(_captureArea.Width, _captureArea.Height, PixelFormat.Format32bppArgb);
+        CaptureArea = captureArea;
+        _captureBitmap = new Bitmap(CaptureArea.Width, CaptureArea.Height, PixelFormat.Format32bppArgb);
 
         if (targetFps <= 0)
             throw new ArgumentOutOfRangeException(nameof(targetFps), $"{nameof(targetFps)} must be greater than zero");
@@ -48,20 +45,22 @@ public class CopyScreenCapture : IScreenCapture {
         Directory.CreateDirectory(_outputFolder);
     }
 
+    public Rectangle CaptureArea { get; set; }
     public Action<VideoInfo>? ScreenRefreshed { get; set; }
 
     public void StartCapture() {
         Console.WriteLine("StartCapture");
         var captureGraphics = Graphics.FromImage(_captureBitmap);
 
-        var stopwatch = new Stopwatch();
+
         if (ScreenRefreshed != null) {
+            var stopwatch = new Stopwatch();
             _timer.Tick += (_, _) => {
                 stopwatch.Restart();
-                captureGraphics.CopyFromScreen(_captureArea.Left, _captureArea.Top, 0, 0, _captureArea.Size);
+                captureGraphics.CopyFromScreen(CaptureArea.Left, CaptureArea.Top, 0, 0, CaptureArea.Size);
                 var videoInfo = new VideoInfo {
-                    Width = _captureArea.Width,
-                    Height = _captureArea.Height,
+                    Width = CaptureArea.Width,
+                    Height = CaptureArea.Height,
                     Data = GetPixelData(_captureBitmap),
                     FormatType = VideoBufferType.Bgra
                 };

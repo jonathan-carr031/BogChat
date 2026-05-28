@@ -1,6 +1,6 @@
 ﻿using LiveKit.Proto;
 
-namespace BogChatDesktopClient.Features.ScreenCapture.Models;
+namespace BogChatDesktopClient.Features.VideoCapture.Models;
 
 public struct VideoInfo {
     public string Name { get; set; }

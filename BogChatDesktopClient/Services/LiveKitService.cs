@@ -5,7 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BogChatDesktopClient.Features.ScreenCapture;
-using BogChatDesktopClient.Features.ScreenCapture.Models;
+using BogChatDesktopClient.Features.VideoCapture;
+using BogChatDesktopClient.Features.VideoCapture.Models;
 using BogChatDesktopClient.ScreenCapture;
 using LiveKit.Proto;
 using LiveKit.Rtc;
@@ -30,7 +31,6 @@ public class LiveKitService {
     private readonly RoomServiceClient _roomServiceClient = new(LiveKitUrl, ApiKey, ApiSecret);
 
     private readonly ApplicationVideoCapture _videoCapture;
-    // private LocalTrackPublication? _publication;
 
     private byte[] _data = [];
 
@@ -45,29 +45,15 @@ public class LiveKitService {
     private string _username = "desktop";
     private VideoSource? _videoSource;
 
-    public LiveKitService() {
+    public LiveKitService(IScreenCapture screenCapture) {
         _audioHandler = new AudioHandler();
+        _screenCapture = screenCapture;
 
         _outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ScreenCapture");
         Directory.CreateDirectory(_outputFolder);
         _outputFileName = Path.Combine(_outputFolder, $"ScreenCapture_{DateTime.Now:yyy-MM-dd HH-mm-ss}.mp4");
 
-        GenerateByteArray();
-
         _screenCapture = new GpuImageCapture();
-    }
-
-    private void GenerateByteArray() {
-        var width = 2560;
-        var height = 1440;
-        var size = (int)(2560 * 1440 * 1.5);
-        _data = new byte[size];
-
-        for (var y = 0; y < height; y++) {
-            for (var x = 0; x < width; x++) {
-                _data[y * width + x] = 125;
-            }
-        }
     }
 
     private void OnAudioReceived(byte[] buffer, int bytes) {
@@ -125,13 +111,17 @@ public class LiveKitService {
     }
 
     public async Task InitializeVideoSource() {
-        _videoSource = new VideoSource(2560, 1440);
+        _screenCapture = new CopyScreenCapture {
+            ScreenRefreshed = OnFrameReceived
+        };
+
+        var captureArea = _screenCapture.CaptureArea;
+
+        _videoSource = new VideoSource(captureArea.Width, captureArea.Height);
         var videoTrack = _videoSource.CreateTrack($"{_username}-video");
         var videoPublication = await _room.LocalParticipant.PublishTrackAsync(videoTrack);
         Console.WriteLine($"Published video track: {videoPublication.Sid}\n");
-        _screenCapture = new CopyScreenCapture() {
-            ScreenRefreshed = OnFrameReceived
-        };
+
 
         _screenCapture.StartCapture();
     }
@@ -141,13 +131,10 @@ public class LiveKitService {
     }
 
     private void OnFrameReceived(VideoInfo videoInfo) {
-        using var memoryStream = new MemoryStream();
-        memoryStream.Write(videoInfo.Data, 0, videoInfo.Data.Length);
-        var frames = memoryStream.GetBuffer();
-        if (frames.Length != 0) {
-            var videoFrame = new VideoFrame(videoInfo.Width, videoInfo.Height, VideoBufferType.Bgra, frames);
+        if (videoInfo.Data.Length != 0) {
+            var videoFrame = new VideoFrame(videoInfo.Width, videoInfo.Height, VideoBufferType.Bgra, videoInfo.Data);
+            OnFrameCaptured?.Invoke(videoFrame);
             _videoSource?.CaptureFrame(videoFrame);
-            memoryStream.Seek(0, SeekOrigin.Begin);
         }
     }
 
@@ -183,4 +170,6 @@ public class LiveKitService {
         peopleList.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         return peopleList;
     }
+
+    public event Action<VideoFrame>? OnFrameCaptured;
 }

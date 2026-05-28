@@ -1,9 +1,11 @@
 ﻿using System;
-using BogChatDesktopClient.Features.ScreenCapture.Models;
+using System.Drawing;
+using BogChatDesktopClient.Features.VideoCapture.Models;
 
 namespace BogChatDesktopClient.ScreenCapture;
 
 public interface IScreenCapture {
+    public Rectangle CaptureArea { get; set; }
     public Action<VideoInfo>? ScreenRefreshed { get; set; }
 
     public void StartCapture();

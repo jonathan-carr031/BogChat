@@ -5,10 +5,8 @@ using Updatum;
 
 namespace BogChatDesktopClient.ViewModels;
 
-internal class SplashScreenViewModel : ViewModelBase
-{
-    private static readonly UpdatumManager AppUpdater = new("jonathan-carr031", "BogChat")
-    {
+internal class SplashScreenViewModel : ViewModelBase {
+    private static readonly UpdatumManager AppUpdater = new("jonathan-carr031", "BogChat") {
         InstallUpdateWindowsExeType = UpdatumWindowsExeType.Installer,
         InstallUpdateWindowsInstallerArguments = "/qb" // Displays a basic user interface for MSI package
     };
@@ -18,11 +16,9 @@ internal class SplashScreenViewModel : ViewModelBase
     private bool _isUpdateAvailable;
     private string _startUpMessage = string.Empty;
 
-    public string StartupMessage
-    {
+    public string StartupMessage {
         get => _startUpMessage;
-        set
-        {
+        set {
             _startUpMessage = value;
             OnPropertyChanged();
         }
@@ -35,21 +31,23 @@ internal class SplashScreenViewModel : ViewModelBase
     //     _cancellationTokenSource.Cancel();
     // }
 
-    public async Task CheckForUpdates()
-    {
-        try
-        {
+    public async Task CheckForUpdates() {
+        try {
             _isUpdateAvailable = await AppUpdater.CheckForUpdatesAsync();
             if (!_isUpdateAvailable) return;
 
-            var downloadedAsset = await AppUpdater.DownloadUpdateAsync(cancellationToken: CancellationToken);
+            StartupMessage = "Update Available...";
+
+            var downloadedAsset = await AppUpdater.DownloadUpdateAsync(CancellationToken);
+
+            StartupMessage = "Downloading Update...";
 
             if (downloadedAsset == null) return;
 
+            StartupMessage = "Installing Update...";
             await AppUpdater.InstallUpdateAsync(downloadedAsset);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             Console.WriteLine($"Error: {ex.Message}");
         }
     }

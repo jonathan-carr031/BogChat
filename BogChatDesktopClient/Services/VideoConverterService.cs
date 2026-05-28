@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Platform;
@@ -15,9 +16,9 @@ namespace BogChatDesktopClient.Services;
 [SupportedOSPlatform("windows")]
 public static class VideoConverterService {
     public static Bitmap ConvertToBitmap(VideoFrame frame) {
-        Console.WriteLine($"Video Type: {frame.Type}");
         return frame.Type switch {
             VideoBufferType.I420 => I420ToBitmap(frame.DataBytes, frame.Width, frame.Height),
+            VideoBufferType.Bgra => BgraToBitmap(frame.DataBytes, frame.Width, frame.Height),
             _ => new Bitmap(Avalonia.Platform.PixelFormat.Rgba8888, AlphaFormat.Opaque, IntPtr.Zero, PixelSize.Empty,
                 Vector.Zero, 0)
         };
@@ -71,5 +72,22 @@ public static class VideoConverterService {
         memory.Position = 0;
 
         return new Bitmap(memory);
+    }
+
+    public static Bitmap BgraToBitmap(byte[] rgbaData, int width, int height) {
+        var handle = GCHandle.Alloc(rgbaData, GCHandleType.Pinned);
+        try {
+            return new Bitmap(
+                Avalonia.Platform.PixelFormat.Bgra8888,
+                AlphaFormat.Premul,
+                handle.AddrOfPinnedObject(),
+                new PixelSize(width, height),
+                new Vector(120, 120),
+                width * 4
+            );
+        }
+        finally {
+            handle.Free();
+        }
     }
 }

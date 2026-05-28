@@ -1,76 +1,40 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
+using System.Threading.Tasks;
+using Windows.Security.Credentials;
 
 namespace BogChatDesktopClient;
 
 public static class DataSaver {
+    private const string ApplicationResourceName = "BogChatApp_OAuth";
+
     public static void TestEncryptionAndDecryption(string dataToSave) {
-        var usernameBytes = UnicodeEncoding.ASCII.GetBytes(dataToSave);
-        var fStream = new FileStream("Data.dat", FileMode.OpenOrCreate);
+        Console.WriteLine($"Saving: {dataToSave}");
+        SaveData(dataToSave);
 
-        var entropy = CreateRandomEntropy();
-        var duplicateEntropy = CreateRandomEntropy();
+        Console.WriteLine($"Saved Data");
 
-        Console.WriteLine(entropy == duplicateEntropy);
-
-        Console.WriteLine();
-        Console.WriteLine($"Original data: {UnicodeEncoding.ASCII.GetString(usernameBytes)}");
-        Console.WriteLine("Encrypting and writing to disk...");
-
-        var bytesWritten = EncryptDataToStream(usernameBytes, entropy, DataProtectionScope.CurrentUser, fStream);
-
-        fStream.Close();
-
-        Console.WriteLine("Reading data from disk and decrypting...");
-
-        // Open the file.
-        fStream = new FileStream("Data.dat", FileMode.Open);
-
-        // Read from the stream and decrypt the data.
-        var decryptData = DecryptDataFromStream(entropy, DataProtectionScope.CurrentUser, fStream, bytesWritten);
-
-        fStream.Close();
-
-        Console.WriteLine($"Decrypted data: {UnicodeEncoding.ASCII.GetString(decryptData)}");
+        Console.WriteLine($"Saved Data: {FetchData()}");
     }
 
-    public static bool SaveData(string dataToSave) {
-        var usernameBytes = UnicodeEncoding.ASCII.GetBytes(dataToSave);
-        using var fStream = new FileStream("Data.dat", FileMode.OpenOrCreate);
+    public static void SaveData(string dataToSave) {
+        var vault = new PasswordVault();
+        var credentials = new PasswordCredential(ApplicationResourceName, "CurrentUser", dataToSave);
 
-        var entropy = CreateRandomEntropy();
-
-        Console.WriteLine();
-        Console.WriteLine($"Original data: {UnicodeEncoding.ASCII.GetString(usernameBytes)}");
-        Console.WriteLine("Encrypting and writing to disk...");
-
-        var bytesWritten = EncryptDataToStream(usernameBytes, entropy, DataProtectionScope.CurrentUser, fStream);
-
-        fStream.Close();
-
-        return bytesWritten > 0;
+        vault.Add(credentials);
     }
 
-    public static string FetchData() {
-        Console.WriteLine("Reading data from disk and decrypting...");
-
-        if (!File.Exists("Data.dat")) return "";
-
-        // Open the file.
-        using var fStream = new FileStream("Data.dat", FileMode.Open);
-
-        var entropy = CreateRandomEntropy();
-
-        // Read from the stream and decrypt the data.
-        var decryptData = DecryptDataFromStream(entropy, DataProtectionScope.CurrentUser, fStream, (int)fStream.Length);
-
-        fStream.Close();
-
-        Console.WriteLine($"Decrypted data: {UnicodeEncoding.ASCII.GetString(decryptData)}");
-
-        return UnicodeEncoding.ASCII.GetString(decryptData);
+    public static async Task<string> FetchData() {
+        try {
+            var vault = new PasswordVault();
+            var storedCredentials = vault.Retrieve(ApplicationResourceName, "CurrentUser");
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            return storedCredentials.Password;
+        }
+        catch (Exception e) {
+            return "";
+        }
     }
 
 
