@@ -43,7 +43,7 @@
 
     <ItemGroup>
         <Folder Include="Assets\Audio\"/>
-        <Folder Include="Features\AudioCapture\"/>
+        <Folder Include="Views\Dialogs\"/>
     </ItemGroup>
 
     <ItemGroup>

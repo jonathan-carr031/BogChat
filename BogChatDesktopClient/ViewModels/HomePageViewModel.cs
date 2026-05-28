@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using BogChatDesktopClient.Data;
+using BogChatDesktopClient.Extensions;
+using BogChatDesktopClient.Features.AudioCapture;
+using BogChatDesktopClient.Helpers;
 using BogChatDesktopClient.Services;
 using LiveKit.Rtc;
 using NAudio.Wave;
@@ -115,14 +116,13 @@ public class HomePageViewModel : PageViewModel, IDisposable {
     }
 
     private void GetStreamableItems() {
-        var processes = Process.GetProcesses().Where(process => !string.IsNullOrEmpty(process.MainWindowTitle));
-        var regex = new Regex(@"[^A-Za-z0-9'\s]+");
+        var processes = WindowsProcessManager.GetStreamableProcesses();
 
         foreach (var process in processes) {
             Console.WriteLine(
-                $"{process.Id} - {process.ProcessName} - {regex.Replace(process.MainWindowTitle, "")}");
+                $"{process.Id} - {process.ProcessName} - {process.MainWindowTitle.RemoveNonStandardCharacters()}");
 
-            StreamableItems.Add(new StreamableItem(process.Id, regex.Replace(process.MainWindowTitle, "")));
+            StreamableItems.Add(new StreamableItem(process.Id, process.MainWindowTitle.RemoveNonStandardCharacters()));
         }
     }
 
@@ -140,8 +140,8 @@ public class HomePageViewModel : PageViewModel, IDisposable {
         await _livekitService.InitializeVideoSource();
     }
 
-    public async Task StopStreaming() {
-        await _livekitService.StopStreaming();
+    public void StopStreaming() {
+        _livekitService.StopStreaming();
         StreamPreview = null;
     }
 
@@ -158,7 +158,7 @@ public class HomePageViewModel : PageViewModel, IDisposable {
     }
 
     private void OnFrameCaptured(VideoFrame videoFrame) {
-        var videoFrameBitmap = VideoConverterService.ConvertToBitmap(videoFrame);
+        var videoFrameBitmap = ImageProcessor.ConvertToBitmap(videoFrame);
         StreamPreview = videoFrameBitmap;
     }
 
@@ -183,7 +183,7 @@ public class HomePageViewModel : PageViewModel, IDisposable {
                     await using var videoStream = new VideoStream(eventArgs.Track);
 
                     await foreach (var frame in videoStream.WithCancellation(CancellationToken.None)) {
-                        roomParticipant.VideoStream = VideoConverterService.ConvertToBitmap(frame.Frame);
+                        roomParticipant.VideoStream = ImageProcessor.ConvertToBitmap(frame.Frame);
                     }
 
                     break;

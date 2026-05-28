@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Platform;
 using LiveKit.Proto;
@@ -11,10 +10,9 @@ using LiveKit.Rtc;
 using Bitmap = Avalonia.Media.Imaging.Bitmap;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
-namespace BogChatDesktopClient.Services;
+namespace BogChatDesktopClient.Helpers;
 
-[SupportedOSPlatform("windows")]
-public static class VideoConverterService {
+public static class ImageProcessor {
     public static Bitmap ConvertToBitmap(VideoFrame frame) {
         return frame.Type switch {
             VideoBufferType.I420 => I420ToBitmap(frame.DataBytes, frame.Width, frame.Height),
@@ -44,13 +42,13 @@ public static class VideoConverterService {
                     var yIdx = y * width + x;
                     var uvIdx = (y / 2) * (width / 2) + (x / 2);
 
-                    var Y = data[yPlane + yIdx];
-                    var U = data[uPlane + uvIdx];
-                    var V = data[vPlane + uvIdx];
+                    var yByte = data[yPlane + yIdx];
+                    var uByte = data[uPlane + uvIdx];
+                    var vByte = data[vPlane + uvIdx];
 
-                    var c = Y - 16;
-                    var d = U - 128;
-                    var e = V - 128;
+                    var c = yByte - 16;
+                    var d = uByte - 128;
+                    var e = vByte - 128;
 
                     var r = (byte)Math.Max(0, Math.Min(255, (298 * c + 409 * e + 128) >> 8));
                     var g = (byte)Math.Max(0, Math.Min(255, (298 * c - 100 * d - 208 * e + 128) >> 8));
@@ -74,7 +72,7 @@ public static class VideoConverterService {
         return new Bitmap(memory);
     }
 
-    public static Bitmap BgraToBitmap(byte[] rgbaData, int width, int height) {
+    private static Bitmap BgraToBitmap(byte[] rgbaData, int width, int height) {
         var handle = GCHandle.Alloc(rgbaData, GCHandleType.Pinned);
         try {
             return new Bitmap(
@@ -89,5 +87,18 @@ public static class VideoConverterService {
         finally {
             handle.Free();
         }
+    }
+
+    public static byte[] GetPixelData(System.Drawing.Bitmap bitmap) {
+        var bitmapBounds = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+        var bitmapData = bitmap.LockBits(bitmapBounds, ImageLockMode.WriteOnly, bitmap.PixelFormat);
+        var length = bitmapData.Stride * bitmapData.Height;
+
+        var bytes = new byte[length];
+
+        Marshal.Copy(bitmapData.Scan0, bytes, 0, length);
+        bitmap.UnlockBits(bitmapData);
+
+        return bytes;
     }
 }

@@ -47,6 +47,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: ".\publish\win-x64\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\BogChatDesktopClient\Assets\Images\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\BogChatDesktopClient\ApplicationLoopback.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\BogChatDesktopClient\ApplicationLoopback.lib"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]

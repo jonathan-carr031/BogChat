@@ -48,7 +48,7 @@
             </Border>
             <DockPanel Name="ContentPanel"
                        Margin="12"
-                       IsVisible="False">
+                       IsVisible="True">
                 <StackPanel Orientation="Vertical">
                     <ItemsRepeater ItemsSource="{Binding RoomParticipants}">
                         <ItemsRepeater.ItemTemplate>
@@ -100,7 +100,8 @@
 
                     <TextBlock Name="VersionNumber" Text="No Version Set"></TextBlock>
                 </StackPanel>
-                <Panel DockPanel.Dock="Right">
+                <Panel DockPanel.Dock="Right"
+                       MaxWidth="100">
                     <ItemsRepeater ItemsSource="{Binding StreamableItems}">
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate>

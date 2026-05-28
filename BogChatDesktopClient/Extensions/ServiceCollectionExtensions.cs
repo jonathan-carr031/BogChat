@@ -1,7 +1,7 @@
 ﻿using System;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Factories;
-using BogChatDesktopClient.Features.ScreenCapture;
+using BogChatDesktopClient.Features.VideoCapture;
 using BogChatDesktopClient.ScreenCapture;
 using BogChatDesktopClient.Services;
 using BogChatDesktopClient.ViewModels;

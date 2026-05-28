@@ -5,16 +5,17 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Avalonia.Threading;
 using BogChatDesktopClient.Features.VideoCapture.Models;
+using BogChatDesktopClient.Helpers;
 using BogChatDesktopClient.ScreenCapture;
 using LiveKit.Proto;
 
-namespace BogChatDesktopClient.Features.ScreenCapture;
+namespace BogChatDesktopClient.Features.VideoCapture;
 
 public class CopyScreenCapture : IScreenCapture {
+    private static readonly Rectangle DefaultRectangle = new(0, 0, 1920, 1080);
     private readonly Bitmap _captureBitmap;
 
     private readonly List<double> _frameTimes = [];
@@ -26,7 +27,7 @@ public class CopyScreenCapture : IScreenCapture {
 
     public CopyScreenCapture() : this(Screen.PrimaryScreen != null
         ? Screen.PrimaryScreen.Bounds
-        : new Rectangle(0, 0, 1920, 1080)) { }
+        : DefaultRectangle) { }
 
     private CopyScreenCapture(Rectangle captureArea, uint targetFps = 120) {
         CaptureArea = captureArea;
@@ -52,7 +53,6 @@ public class CopyScreenCapture : IScreenCapture {
         Console.WriteLine("StartCapture");
         var captureGraphics = Graphics.FromImage(_captureBitmap);
 
-
         if (ScreenRefreshed != null) {
             var stopwatch = new Stopwatch();
             _timer.Tick += (_, _) => {
@@ -61,7 +61,7 @@ public class CopyScreenCapture : IScreenCapture {
                 var videoInfo = new VideoInfo {
                     Width = CaptureArea.Width,
                     Height = CaptureArea.Height,
-                    Data = GetPixelData(_captureBitmap),
+                    Data = ImageProcessor.GetPixelData(_captureBitmap),
                     FormatType = VideoBufferType.Bgra
                 };
                 ScreenRefreshed(videoInfo);
@@ -81,18 +81,5 @@ public class CopyScreenCapture : IScreenCapture {
         Console.WriteLine($"Average Time to Capture Frames: {averageCaptureTime}");
         Console.WriteLine($"Actual FPS: {1000f / averageCaptureTime}");
         _timer.Stop();
-    }
-
-    private byte[] GetPixelData(Bitmap bitmap) {
-        var bitmapBounds = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-        var bitmapData = bitmap.LockBits(bitmapBounds, ImageLockMode.WriteOnly, bitmap.PixelFormat);
-        var length = bitmapData.Stride * bitmapData.Height;
-
-        var bytes = new byte[length];
-
-        Marshal.Copy(bitmapData.Scan0, bytes, 0, length);
-        bitmap.UnlockBits(bitmapData);
-
-        return bytes;
     }
 }

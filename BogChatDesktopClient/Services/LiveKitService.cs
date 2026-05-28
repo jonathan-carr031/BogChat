@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BogChatDesktopClient.Features.ScreenCapture;
 using BogChatDesktopClient.Features.VideoCapture;
 using BogChatDesktopClient.Features.VideoCapture.Models;
 using BogChatDesktopClient.ScreenCapture;
@@ -24,21 +22,15 @@ public class LiveKitService {
     // private const string ApiKey = "devkey";
     private const string ApiKey = "APIGNcD9KetoFXf";
 
+    // ReSharper disable once CommentTypo
     // private const string ApiSecret = "nfFhkIxwefgFzu50reCSmesvtmuHPTzZ";
     private const string ApiSecret = "grK2qDGUOc4ylMGt2Jx4KYHFHnnzoCsDOXpKSh7nPnJ";
 
     private readonly AudioHandler _audioHandler;
     private readonly RoomServiceClient _roomServiceClient = new(LiveKitUrl, ApiKey, ApiSecret);
 
-    private readonly ApplicationVideoCapture _videoCapture;
-
-    private byte[] _data = [];
-
     private bool _isMuted;
     private AudioSource? _microphoneAudioSource;
-    private string _outputFileName;
-
-    private string _outputFolder;
 
     private Room? _room;
     private IScreenCapture _screenCapture;
@@ -48,10 +40,6 @@ public class LiveKitService {
     public LiveKitService(IScreenCapture screenCapture) {
         _audioHandler = new AudioHandler();
         _screenCapture = screenCapture;
-
-        _outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ScreenCapture");
-        Directory.CreateDirectory(_outputFolder);
-        _outputFileName = Path.Combine(_outputFolder, $"ScreenCapture_{DateTime.Now:yyy-MM-dd HH-mm-ss}.mp4");
 
         _screenCapture = new GpuImageCapture();
     }
@@ -106,7 +94,6 @@ public class LiveKitService {
         _microphoneAudioSource = InitializeAudioSource();
 
         var audioTrack = LocalAudioTrack.Create($"{_username}-audio", _microphoneAudioSource);
-        // _publication = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
         _ = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
     }
 
@@ -119,23 +106,23 @@ public class LiveKitService {
 
         _videoSource = new VideoSource(captureArea.Width, captureArea.Height);
         var videoTrack = _videoSource.CreateTrack($"{_username}-video");
-        var videoPublication = await _room.LocalParticipant.PublishTrackAsync(videoTrack);
+        var videoPublication = await _room!.LocalParticipant!.PublishTrackAsync(videoTrack);
         Console.WriteLine($"Published video track: {videoPublication.Sid}\n");
 
 
         _screenCapture.StartCapture();
     }
 
-    public async Task StopStreaming() {
+    public void StopStreaming() {
         _screenCapture.StopCapture();
     }
 
     private void OnFrameReceived(VideoInfo videoInfo) {
-        if (videoInfo.Data.Length != 0) {
-            var videoFrame = new VideoFrame(videoInfo.Width, videoInfo.Height, VideoBufferType.Bgra, videoInfo.Data);
-            OnFrameCaptured?.Invoke(videoFrame);
-            _videoSource?.CaptureFrame(videoFrame);
-        }
+        if (videoInfo.Data.Length == 0) return;
+
+        var videoFrame = new VideoFrame(videoInfo.Width, videoInfo.Height, VideoBufferType.Bgra, videoInfo.Data);
+        OnFrameCaptured?.Invoke(videoFrame);
+        _videoSource?.CaptureFrame(videoFrame);
     }
 
     public void ToggleMute() {
