@@ -21,8 +21,8 @@ public static class DataSaver {
             var vault = new PasswordVault();
             var storedCredentials = vault.Retrieve(ApplicationResourceName, "CurrentUser");
             await Task.Delay(TimeSpan.FromMilliseconds(1));
-            // return storedCredentials.Password;
-            return "debugging";
+            return storedCredentials.Password;
+            // return "debugging";
         }
         catch (Exception e) {
             return "";
