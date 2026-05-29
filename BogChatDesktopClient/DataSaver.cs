@@ -9,15 +9,6 @@ namespace BogChatDesktopClient;
 public static class DataSaver {
     private const string ApplicationResourceName = "BogChatApp_OAuth";
 
-    public static void TestEncryptionAndDecryption(string dataToSave) {
-        Console.WriteLine($"Saving: {dataToSave}");
-        SaveData(dataToSave);
-
-        Console.WriteLine($"Saved Data");
-
-        Console.WriteLine($"Saved Data: {FetchData()}");
-    }
-
     public static void SaveData(string dataToSave) {
         var vault = new PasswordVault();
         var credentials = new PasswordCredential(ApplicationResourceName, "CurrentUser", dataToSave);
@@ -29,8 +20,9 @@ public static class DataSaver {
         try {
             var vault = new PasswordVault();
             var storedCredentials = vault.Retrieve(ApplicationResourceName, "CurrentUser");
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            return storedCredentials.Password;
+            await Task.Delay(TimeSpan.FromMilliseconds(1));
+            // return storedCredentials.Password;
+            return "debugging";
         }
         catch (Exception e) {
             return "";

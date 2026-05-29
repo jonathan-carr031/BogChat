@@ -53,10 +53,6 @@ public class LiveKitService {
         var audioFrame = new AudioFrame(buffer, _audioHandler.WaveIn.WaveFormat.SampleRate,
             _audioHandler.WaveIn.WaveFormat.Channels, 1440);
 
-        Console.WriteLine(
-            $"AudioFrame Data: {_audioHandler.WaveIn.WaveFormat.SampleRate} - {_audioHandler.WaveIn.WaveFormat.Channels} - 1440");
-        Console.WriteLine($"Microphone Bytes: {buffer.Length} - {bytes}");
-
         _ = _microphoneAudioSource?.CaptureFrameAsync(audioFrame);
     }
 
@@ -204,7 +200,7 @@ public class LiveKitService {
             _ = audioSource.CaptureFrameAsync(audioFrame);
         };
 
-        await Task.Run(() => { ApplicationAudioCapture.CaptureApplicationAudio(processId); });
+        _ = Task.Run(() => { ApplicationAudioCapture.CaptureApplicationAudio(processId); });
 
         var audioTrack = LocalAudioTrack.Create($"{_username}-application-audio", audioSource);
         _localApplicationAudioTrackPublication = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);

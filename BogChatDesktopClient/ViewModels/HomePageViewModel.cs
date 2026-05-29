@@ -209,6 +209,11 @@ public class HomePageViewModel : PageViewModel, IDisposable {
                     waveOut.Play();
 
                     await foreach (var frame in audioStream.WithCancellation(CancellationToken.None)) {
+                        Console.WriteLine(@"\=====================================/");
+                        Console.WriteLine($"Track: {eventArgs.Track.Name}");
+                        Console.WriteLine($"Audio Info: {audioStream.SampleRate} - {audioStream.NumChannels}");
+                        Console.WriteLine($"Bytes Received: {frame.Frame.DataBytes.Length}");
+                        Console.WriteLine(@"/=====================================\");
                         bufferedWaveProvider.AddSamples(frame.Frame.DataBytes, 0, frame.Frame.DataBytes.Length);
                     }
 
