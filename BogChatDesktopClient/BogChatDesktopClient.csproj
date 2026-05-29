@@ -12,7 +12,6 @@
         <Configurations>Release;Debug</Configurations>
         <Platforms>x64</Platforms>
         <ApplicationIcon>Assets\Images\icon.ico</ApplicationIcon>
-        <AssemblyVersion>99.99</AssemblyVersion>
     </PropertyGroup>
 
     <PropertyGroup>
