@@ -36,14 +36,4 @@ public partial class HomePageView : UserControl {
         LeaveRoomButton.IsVisible = false;
         ContentPanel.IsVisible = false;
     }
-
-    private void StartStreaming(object? sender, RoutedEventArgs e) {
-        StartStreamButton.IsVisible = false;
-        StopStreamButton.IsVisible = true;
-    }
-
-    private void StopStreaming(object? sender, RoutedEventArgs e) {
-        StartStreamButton.IsVisible = true;
-        StopStreamButton.IsVisible = false;
-    }
 }

@@ -6,7 +6,12 @@ using BogChatDesktopClient.Helpers;
 namespace BogChatDesktopClient.Features.AudioCapture;
 
 public static class ApplicationAudioCapture {
+    public const ushort Channels = 1;
+    public const int SampleRate = 44100;
+    public const int BitsPerSample = 16;
     private static MemoryStream _memoryStream = new();
+
+    public static Action<byte[], int>? OnAudioDataReceived;
 
     [DllImport("ApplicationLoopback.dll", CallingConvention = CallingConvention.StdCall)]
     private static extern void SetAudioCallback(AudioCallback callback);
@@ -19,10 +24,14 @@ public static class ApplicationAudioCapture {
     private static extern int StopCaptureAsync();
 
     private static void OnAudioReceived(IntPtr data, int length) {
-        byte[] buffer = new byte[length];
+        var memoryStream = new MemoryStream();
+        var buffer = new byte[length];
         Marshal.Copy(data, buffer, 0, length);
 
+        memoryStream.Write(buffer, 0, buffer.Length);
         _memoryStream.Write(buffer, 0, buffer.Length);
+
+        OnAudioDataReceived?.Invoke(buffer, length);
     }
 
     public static void CaptureApplicationAudio(uint processId) {
@@ -30,7 +39,7 @@ public static class ApplicationAudioCapture {
 
         SetAudioCallback(OnAudioReceived);
 
-        StartCaptureAsync(processId, true, 1, 44100, 16);
+        StartCaptureAsync(processId, true, Channels, SampleRate, BitsPerSample);
     }
 
     public static void CaptureDesktopAudio() {
@@ -40,7 +49,7 @@ public static class ApplicationAudioCapture {
 
         var processes = WindowsProcessManager.GetOwnProcess();
         try {
-            StartCaptureAsync(processes, false, 1, 44100, 16);
+            StartCaptureAsync(processes, false, Channels, SampleRate, BitsPerSample);
         }
         catch (Exception e) {
             Console.WriteLine(e.Message);
@@ -51,8 +60,8 @@ public static class ApplicationAudioCapture {
     public static void StopApplicationAudio() {
         StopCaptureAsync();
         var outputPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "NAudioDemo");
-        WavConverter.WriteWavFile(_memoryStream, Path.Combine(outputPath, "Audio.wav"), 44100, 1,
-            16); // We are converting PCM format to WAV.
+        WavConverter.WriteWavFile(_memoryStream, Path.Combine(outputPath, "Audio.wav"), SampleRate, (short)Channels,
+            BitsPerSample); // We are converting PCM format to WAV.
 
         _memoryStream.Close();
         _memoryStream.Flush();

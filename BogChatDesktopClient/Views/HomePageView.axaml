@@ -6,9 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="BogChatDesktopClient.Views.HomePageView"
              x:DataType="viewModels:HomePageViewModel">
-    <Panel Margin="6"
-           HorizontalAlignment="Stretch">
-        <TextBlock Text="Home Page"></TextBlock>
+    <Panel HorizontalAlignment="Stretch">
         <StackPanel
             Orientation="Horizontal"
             Background="#1f1f1f">
@@ -66,7 +64,7 @@
                             Background="#131313">
                         <Border CornerRadius="12"
                                 ClipToBounds="True">
-                            <Panel>
+                            <Panel Name="UserStreamPreviewCard">
                                 <Image Name="DisplayImage"
                                        Width="213"
                                        Height="120"
@@ -89,14 +87,13 @@
                             Content="Unmute"
                             IsVisible="False" />
                     <Button Name="StartStreamButton"
-                            Click="StartStreaming"
                             Command="{Binding RecordApplication}"
-                            Content="Stream Screen" />
+                            Content="Stream Screen"
+                            IsVisible="{Binding !IsStreaming}" />
                     <Button Name="StopStreamButton"
-                            Click="StopStreaming"
                             Command="{Binding StopStreaming}"
-                            IsVisible="False"
-                            Content="Stop Streaming" />
+                            Content="Stop Streaming"
+                            IsVisible="{Binding IsStreaming}" />
 
                     <TextBlock Name="VersionNumber" Text="No Version Set"></TextBlock>
                 </StackPanel>

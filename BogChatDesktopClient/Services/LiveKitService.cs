@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BogChatDesktopClient.Features.AudioCapture;
 using BogChatDesktopClient.Features.VideoCapture;
 using BogChatDesktopClient.Features.VideoCapture.Models;
 using BogChatDesktopClient.ScreenCapture;
@@ -28,8 +29,10 @@ public class LiveKitService {
 
     private readonly AudioHandler _audioHandler;
     private readonly RoomServiceClient _roomServiceClient = new(LiveKitUrl, ApiKey, ApiSecret);
+    private string? _applicationAudioPublicationSid;
 
     private bool _isMuted;
+    private LocalTrackPublication? _localApplicationAudioTrackPublication;
     private AudioSource? _microphoneAudioSource;
 
     private Room? _room;
@@ -49,6 +52,11 @@ public class LiveKitService {
 
         var audioFrame = new AudioFrame(buffer, _audioHandler.WaveIn.WaveFormat.SampleRate,
             _audioHandler.WaveIn.WaveFormat.Channels, 1440);
+
+        Console.WriteLine(
+            $"AudioFrame Data: {_audioHandler.WaveIn.WaveFormat.SampleRate} - {_audioHandler.WaveIn.WaveFormat.Channels} - 1440");
+        Console.WriteLine($"Microphone Bytes: {buffer.Length} - {bytes}");
+
         _ = _microphoneAudioSource?.CaptureFrameAsync(audioFrame);
     }
 
@@ -108,13 +116,23 @@ public class LiveKitService {
         var videoTrack = _videoSource.CreateTrack($"{_username}-video");
         var videoPublication = await _room!.LocalParticipant!.PublishTrackAsync(videoTrack);
         Console.WriteLine($"Published video track: {videoPublication.Sid}\n");
+    }
 
-
+    private void StartStreaming() {
         _screenCapture.StartCapture();
     }
 
-    public void StopStreaming() {
+    public async Task StreamDesktop() {
+        await InitializeVideoSource();
+        StartStreaming();
+    }
+
+    public async Task StopStreaming() {
         _screenCapture.StopCapture();
+        ApplicationAudioCapture.StopApplicationAudio();
+
+        if (_applicationAudioPublicationSid != null)
+            await _room.LocalParticipant.UnpublishTrackAsync(_applicationAudioPublicationSid);
     }
 
     private void OnFrameReceived(VideoInfo videoInfo) {
@@ -159,4 +177,37 @@ public class LiveKitService {
     }
 
     public event Action<VideoFrame>? OnFrameCaptured;
+
+    public void StreamApplication(uint processId) {
+        //Stream Video
+        _ = StreamApplicationVideo(processId);
+
+        //Stream Audio
+        _ = StreamApplicationAudio(processId);
+    }
+
+    private async Task StreamApplicationVideo(uint processId) {
+        await InitializeVideoSource();
+        StartStreaming();
+    }
+
+    private async Task StreamApplicationAudio(uint processId) {
+        var audioSource = new AudioSource(ApplicationAudioCapture.SampleRate,
+            ApplicationAudioCapture.Channels);
+
+        ApplicationAudioCapture.OnAudioDataReceived += (bytes, size) => {
+            var audioFrame = new AudioFrame(bytes, ApplicationAudioCapture.SampleRate,
+                ApplicationAudioCapture.Channels, ApplicationAudioCapture.BitsPerSample);
+
+            Console.WriteLine($"Bytes Received: {bytes.Length}");
+
+            _ = audioSource.CaptureFrameAsync(audioFrame);
+        };
+
+        await Task.Run(() => { ApplicationAudioCapture.CaptureApplicationAudio(processId); });
+
+        var audioTrack = LocalAudioTrack.Create($"{_username}-application-audio", audioSource);
+        _localApplicationAudioTrackPublication = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
+        _applicationAudioPublicationSid = _localApplicationAudioTrackPublication.Sid;
+    }
 }

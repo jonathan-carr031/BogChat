@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Extensions;
-using BogChatDesktopClient.Features.AudioCapture;
 using BogChatDesktopClient.Helpers;
 using BogChatDesktopClient.Services;
 using LiveKit.Rtc;
@@ -22,15 +21,12 @@ namespace BogChatDesktopClient.ViewModels;
 
 public class HomePageViewModel : PageViewModel, IDisposable {
     private readonly LiveKitService _livekitService;
-
     private readonly MemoryStream _memoryStream = new();
-
     private readonly DispatcherTimer _timer;
 
+    private bool _isStreaming;
     private Room? _room;
-
     private Bitmap? _streamPreview;
-
     private string? _username;
 
     public HomePageViewModel(LiveKitService livekitService) {
@@ -72,6 +68,15 @@ public class HomePageViewModel : PageViewModel, IDisposable {
             OnPropertyChanged();
         }
     }
+
+    public bool IsStreaming {
+        get => _isStreaming;
+        set {
+            _isStreaming = value;
+            OnPropertyChanged();
+        }
+    }
+
 
     public void Dispose() {
         _timer.Stop();
@@ -137,23 +142,22 @@ public class HomePageViewModel : PageViewModel, IDisposable {
     }
 
     public async Task RecordApplication() {
-        await _livekitService.InitializeVideoSource();
+        await _livekitService.StreamDesktop();
+        IsStreaming = true;
     }
 
     public void StopStreaming() {
-        _livekitService.StopStreaming();
+        _ = _livekitService.StopStreaming();
         StreamPreview = null;
+        IsStreaming = false;
     }
 
     public async Task StreamableItemClickEvent(StreamableItem item) {
         Console.WriteLine($"{item.ProcessId} - {item.WindowTitle} clicked...");
 
         if (item.ProcessId > 0) {
-            _ = Task.Run(() => { ApplicationAudioCapture.CaptureApplicationAudio((uint)item.ProcessId); });
-
-            await Task.Delay(5000);
-
-            ApplicationAudioCapture.StopApplicationAudio();
+            _livekitService.StreamApplication((uint)item.ProcessId);
+            IsStreaming = true;
         }
     }
 
