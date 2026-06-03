@@ -31,9 +31,12 @@ public class LiveKitService {
     private readonly RoomServiceClient _roomServiceClient = new(LiveKitUrl, ApiKey, ApiSecret);
     private string? _applicationAudioPublicationSid;
 
+    private AudioSource? _applicationAudioSource;
+
     private bool _isMuted;
     private LocalTrackPublication? _localApplicationAudioTrackPublication;
     private AudioSource? _microphoneAudioSource;
+    private LocalTrackPublication? _microphonePublication;
 
     private Room? _room;
     private IScreenCapture _screenCapture;
@@ -98,7 +101,7 @@ public class LiveKitService {
         _microphoneAudioSource = InitializeAudioSource();
 
         var audioTrack = LocalAudioTrack.Create($"{_username}-audio", _microphoneAudioSource);
-        _ = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
+        _microphonePublication = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
     }
 
     public async Task InitializeVideoSource() {
@@ -139,8 +142,16 @@ public class LiveKitService {
         _videoSource?.CaptureFrame(videoFrame);
     }
 
-    public void ToggleMute() {
+    public async Task ToggleMute() {
         _isMuted = !_isMuted;
+        if (_isMuted) {
+            if (_microphonePublication?.Sid != null)
+                await _room.LocalParticipant.UnpublishTrackAsync(_microphonePublication.Sid);
+        }
+        else {
+            var audioTrack = LocalAudioTrack.Create($"{_username}-audio", _microphoneAudioSource);
+            _microphonePublication = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
+        }
     }
 
     private AudioSource InitializeAudioSource() {
@@ -188,22 +199,19 @@ public class LiveKitService {
     }
 
     private async Task StreamApplicationAudio(uint processId) {
-        var audioSource = new AudioSource(ApplicationAudioCapture.SampleRate,
+        //Initialize Audio Source
+        ApplicationAudioCapture.OnAudioDataReceived = ((bytes, i) => {
+            var audioFrame = new AudioFrame(bytes, ApplicationAudioCapture.SampleRate,
+                ApplicationAudioCapture.Channels, 441);
+
+            _ = _applicationAudioSource?.CaptureFrameAsync(audioFrame);
+        });
+        _ = Task.Run(() => { ApplicationAudioCapture.CaptureApplicationAudio(processId); });
+        _applicationAudioSource = new AudioSource(ApplicationAudioCapture.SampleRate,
             ApplicationAudioCapture.Channels);
 
-        ApplicationAudioCapture.OnAudioDataReceived += (bytes, size) => {
-            var audioFrame = new AudioFrame(bytes, ApplicationAudioCapture.SampleRate,
-                ApplicationAudioCapture.Channels, ApplicationAudioCapture.BitsPerSample);
-
-            Console.WriteLine($"Bytes Received: {bytes.Length}");
-
-            _ = audioSource.CaptureFrameAsync(audioFrame);
-        };
-
-        _ = Task.Run(() => { ApplicationAudioCapture.CaptureApplicationAudio(processId); });
-
-        var audioTrack = LocalAudioTrack.Create($"{_username}-application-audio", audioSource);
+        //Publish Track
+        var audioTrack = LocalAudioTrack.Create($"{_username}-application-audio", _applicationAudioSource);
         _localApplicationAudioTrackPublication = await _room.LocalParticipant!.PublishTrackAsync(audioTrack);
-        _applicationAudioPublicationSid = _localApplicationAudioTrackPublication.Sid;
     }
 }

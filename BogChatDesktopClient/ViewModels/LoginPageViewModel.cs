@@ -1,7 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Messages;
+using BogChatDesktopClient.Services;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 
@@ -16,23 +16,36 @@ public partial class LoginPageViewModel : PageViewModel {
         _messenger = messenger;
     }
 
-    public string? Username { get; set; }
-    public string? Password { get; set; }
     public string? ErrorMessage { get; set; }
 
     [RelayCommand]
     public async Task LoginCommand() {
-        Console.WriteLine("User is Logging in!");
-
-        if (string.IsNullOrWhiteSpace(Username)) {
-            ErrorMessage = "Username cannot be blank";
+        ErrorMessage = null;
+        var accessTokenResponse = await OAuthService.StartOAuth();
+        if (accessTokenResponse == null) {
+            ErrorMessage = "Failed to Login";
             return;
         }
 
-        DataSaver.SaveData(Username);
+        DataSaver.SaveAccessToken(accessTokenResponse);
 
-        await Task.Delay(1000);
+        var accessToken = accessTokenResponse.AccessToken;
+        if (string.IsNullOrEmpty(accessToken)) {
+            ErrorMessage = "Invalid Access Token";
+            return;
+        }
 
-        _messenger.Send(new LoginSuccessMessage(Username));
+        var token = JwtHandler.Decode(accessToken);
+        if (token != null) {
+            var username = JwtHandler.ExtractUsername(token);
+            if (string.IsNullOrEmpty(username)) {
+                ErrorMessage = "Unable to retrieve username";
+                return;
+            }
+
+            _messenger.Send(new LoginSuccessMessage(username));
+        }
+
+        ErrorMessage = "Unable to Login";
     }
 }

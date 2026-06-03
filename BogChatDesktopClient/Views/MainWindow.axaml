@@ -7,31 +7,31 @@
         x:Class="BogChatDesktopClient.Views.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
         Title="BogChatDesktopClient"
-        Background="#1f1f1f">
+        Background="#1f1f1f"
+        Padding="6">
 
     <Window.Styles>
         <StyleInclude Source="/Styles/UserCardStyles.axaml" />
     </Window.Styles>
 
-    <Panel Margin="6">
+    <Panel>
         <ContentControl Content="{Binding CurrentPage}" />
-
-        <Panel Name="OverlayContent"
-               Background="red"
-               IsVisible="False">
-            <Image Name="FullScreenRender"
-                   HorizontalAlignment="Stretch"
-                   VerticalAlignment="Stretch">
-            </Image>
-        </Panel>
-        <Button Content="Full Screen"
-                Click="ToggleFullScreen"
-                Margin="24"
-                Background="#55FF55"
-                Foreground="#1f1f1f"
-                FontWeight="Bold"
-                FontSize="24"
-                VerticalAlignment="Bottom"
-                HorizontalAlignment="Right" />
+        <!-- <Panel Name="OverlayContent" -->
+        <!--        Background="Red" -->
+        <!--        IsVisible="False"> -->
+        <!--     <Image Name="FullScreenRender" -->
+        <!--            HorizontalAlignment="Stretch" -->
+        <!--            VerticalAlignment="Stretch"> -->
+        <!--     </Image> -->
+        <!-- </Panel> -->
+        <!-- <Button Content="Full Screen" -->
+        <!--         Click="ToggleFullScreen" -->
+        <!--         Margin="24" -->
+        <!--         Background="#55FF55" -->
+        <!--         Foreground="#1f1f1f" -->
+        <!--         FontWeight="Bold" -->
+        <!--         FontSize="24" -->
+        <!--         VerticalAlignment="Bottom" -->
+        <!--         HorizontalAlignment="Right" /> -->
     </Panel>
 </Window>

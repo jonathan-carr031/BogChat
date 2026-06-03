@@ -19,20 +19,15 @@
             <StackPanel HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Spacing="6">
-                <Label Content="Username:" />
-                <TextBox Name="Username" Padding="6"
-                         MinWidth="200"
-                         Text="{Binding Username}" />
                 <Button Command="{Binding LoginCommand}"
                         Margin="3"
                         Padding="6"
                         Background="#1f1f1f"
                         Foreground="#EEEEEE"
-                        Content="Login" />
+                        Content="Login with Authentik" />
 
                 <TextBlock Name="ErrorMessage" IsVisible="False" Text="{Binding ErrorMessage}" />
             </StackPanel>
         </Border>
-
     </Panel>
 </UserControl>

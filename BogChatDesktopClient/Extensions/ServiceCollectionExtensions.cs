@@ -30,6 +30,7 @@ public static class ServiceCollectionExtensions {
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<HomePageViewModel>();
         services.AddTransient<LoginPageViewModel>();
+        services.AddTransient<StreamPaneViewModel>();
 
         return services;
     }

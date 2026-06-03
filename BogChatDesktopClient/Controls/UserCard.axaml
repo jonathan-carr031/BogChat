@@ -3,26 +3,27 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:data="clr-namespace:BogChatDesktopClient.Data"
-             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="169"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="1000"
              Background="Transparent"
              x:Class="BogChatDesktopClient.Controls.UserCard"
              x:DataType="data:RoomParticipant">
 
-    <Border CornerRadius="8"
-            ClipToBounds="True"
-            BorderBrush="{Binding BorderColor}"
-            BorderThickness="4"
-            Background="#131313">
+    <Border
+        CornerRadius="8"
+        ClipToBounds="True"
+        BorderBrush="{Binding BorderColor}"
+        BorderThickness="4"
+        Width="600"
+        Height="338"
+        Background="#131313">
         <Border CornerRadius="12"
                 ClipToBounds="True">
             <Panel>
                 <Image Name="DisplayImage"
-                       Width="600"
-                       Height="338"
                        Stretch="Fill"
                        Source="{Binding VideoStream}" />
 
-                <TextBlock Text="{Binding Username}" Margin="20"></TextBlock>
+                <TextBlock Text="{Binding Username}" Margin="20" Foreground="#dedede"></TextBlock>
             </Panel>
         </Border>
     </Border>

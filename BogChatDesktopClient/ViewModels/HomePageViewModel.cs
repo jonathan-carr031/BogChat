@@ -4,6 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Extensions;
@@ -25,14 +28,20 @@ public class HomePageViewModel : PageViewModel, IDisposable {
     private readonly DispatcherTimer _timer;
 
     private bool _isStreaming;
+
+    private RoomParticipant? _maximizedParticipant;
     private Room? _room;
     private Bitmap? _streamPreview;
     private string? _username;
 
+    public HomePageViewModel() {
+        Username = "Test UserName";
+    }
+
     public HomePageViewModel(LiveKitService livekitService) {
+        PageName = PageNames.HomePage;
         _livekitService = livekitService;
         _livekitService.OnFrameCaptured += OnFrameCaptured;
-        PageName = PageNames.HomePage;
 
         RoomParticipants = [];
 
@@ -47,10 +56,51 @@ public class HomePageViewModel : PageViewModel, IDisposable {
         };
         _timer.Tick += (sender, e) => { _ = GetRoomParticipants("room-name"); };
         _timer.Start();
+
+        var self = new RoomParticipant {
+            Username = "self"
+        };
+        var trash = new RoomParticipant {
+            Username = "trash"
+        };
+        var azytzeen = new RoomParticipant {
+            Username = "azytzeen"
+        };
+        var ahr102 = new RoomParticipant {
+            Username = "ahr102"
+        };
+        var koldmilk = new RoomParticipant {
+            Username = "koldmilk"
+        };
+
+        RoomParticipants.Add(self);
+        RoomParticipants.Add(trash);
+        RoomParticipants.Add(azytzeen);
+        RoomParticipants.Add(ahr102);
+        RoomParticipants.Add(koldmilk);
+        var timer = new DispatcherTimer {
+            Interval = TimeSpan.FromSeconds(5)
+        };
+
+        timer.Tick += OnTimerOnTick;
+
+        timer.Start();
     }
 
+    public RoomParticipant? MaximizedParticipant {
+        get => _maximizedParticipant;
+        set {
+            _maximizedParticipant = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasMaximizedParticipant));
+        }
+    }
+
+    public bool HasMaximizedParticipant => MaximizedParticipant != null;
+
+
     public ObservableCollection<StreamableItem> StreamableItems { get; set; }
-    public ObservableCollection<RoomParticipant> RoomParticipants { get; set; }
+    public ObservableCollection<RoomParticipant> RoomParticipants { get; set; } = [];
     public ObservableCollection<string?> RoomPeople { get; set; } = [];
 
     public Bitmap? StreamPreview {
@@ -80,6 +130,29 @@ public class HomePageViewModel : PageViewModel, IDisposable {
 
     public void Dispose() {
         _timer.Stop();
+    }
+
+    private void OnTimerOnTick(object? sender, EventArgs e) {
+        var user = RoomParticipants.First();
+        if (RoomParticipants.Count == 5) {
+            RoomParticipants.RemoveAt(RoomParticipants.Count - 1);
+            user.VideoStream = new Bitmap(@"C:\Users\jonat\Desktop\ScreenCapture\test_picture.jpeg");
+        }
+        else {
+            RoomParticipants.Add(new RoomParticipant {
+                Username = "koldmilk"
+            });
+
+            user.VideoStream = new WriteableBitmap(
+                new PixelSize(200, 200),
+                new Vector(96, 96),
+                PixelFormat.Bgra8888,
+                AlphaFormat.Premul);
+        }
+    }
+
+    public async Task MaximizePane(RoomParticipant? roomParticipant) {
+        MaximizedParticipant = roomParticipant;
     }
 
     public async Task JoinRoom() {
@@ -197,7 +270,9 @@ public class HomePageViewModel : PageViewModel, IDisposable {
                     await using var audioStream = new AudioStream(eventArgs.Track);
 
                     var sampleRate = (int)audioStream.SampleRate;
+                    // var sampleRate = (int)44100;
                     var channels = (int)audioStream.NumChannels;
+                    // var channels = (int)1;
                     var waveFormat = new WaveFormat(sampleRate, channels);
                     var bufferedWaveProvider = new BufferedWaveProvider(waveFormat) {
                         DiscardOnBufferOverflow = true
@@ -209,11 +284,11 @@ public class HomePageViewModel : PageViewModel, IDisposable {
                     waveOut.Play();
 
                     await foreach (var frame in audioStream.WithCancellation(CancellationToken.None)) {
-                        Console.WriteLine(@"\=====================================/");
-                        Console.WriteLine($"Track: {eventArgs.Track.Name}");
-                        Console.WriteLine($"Audio Info: {audioStream.SampleRate} - {audioStream.NumChannels}");
-                        Console.WriteLine($"Bytes Received: {frame.Frame.DataBytes.Length}");
-                        Console.WriteLine(@"/=====================================\");
+                        // Console.WriteLine(@"\=====================================/");
+                        // Console.WriteLine($"Track: {eventArgs.Track.Name}");
+                        // Console.WriteLine($"Audio Info: {audioStream.SampleRate} - {audioStream.NumChannels}");
+                        // Console.WriteLine($"Bytes Received: {frame.Frame.DataBytes.Length}");
+                        // Console.WriteLine(@"/=====================================\");
                         bufferedWaveProvider.AddSamples(frame.Frame.DataBytes, 0, frame.Frame.DataBytes.Length);
                     }
 
@@ -239,5 +314,23 @@ public class HomePageViewModel : PageViewModel, IDisposable {
 
     public void UnmuteVoice() {
         _livekitService.ToggleMute();
+    }
+
+    public async Task AddParticipants() {
+        RoomParticipants.Add(new RoomParticipant {
+            Username = "User1"
+        });
+        RoomParticipants.Add(new RoomParticipant {
+            Username = "User2"
+        });
+        RoomParticipants.Add(new RoomParticipant {
+            Username = "User3"
+        });
+        RoomParticipants.Add(new RoomParticipant {
+            Username = "User4"
+        });
+        RoomParticipants.Add(new RoomParticipant {
+            Username = "User5"
+        });
     }
 }

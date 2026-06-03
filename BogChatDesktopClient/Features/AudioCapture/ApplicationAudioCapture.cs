@@ -8,7 +8,7 @@ namespace BogChatDesktopClient.Features.AudioCapture;
 public static class ApplicationAudioCapture {
     public const ushort Channels = 1;
     public const int SampleRate = 44100;
-    public const int BitsPerSample = 16;
+    private const int BitsPerSample = 16;
     private static MemoryStream _memoryStream = new();
 
     public static Action<byte[], int>? OnAudioDataReceived;
@@ -29,7 +29,7 @@ public static class ApplicationAudioCapture {
         Marshal.Copy(data, buffer, 0, length);
 
         memoryStream.Write(buffer, 0, buffer.Length);
-        _memoryStream.Write(buffer, 0, buffer.Length);
+        // _memoryStream.Write(buffer, 0, buffer.Length);
 
         OnAudioDataReceived?.Invoke(buffer, length);
     }
@@ -59,13 +59,13 @@ public static class ApplicationAudioCapture {
 
     public static void StopApplicationAudio() {
         StopCaptureAsync();
-        var outputPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "NAudioDemo");
-        WavConverter.WriteWavFile(_memoryStream, Path.Combine(outputPath, "Audio.wav"), SampleRate, (short)Channels,
-            BitsPerSample); // We are converting PCM format to WAV.
+        // var outputPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "NAudioDemo");
+        // WavConverter.WriteWavFile(_memoryStream, Path.Combine(outputPath, "Audio.wav"), SampleRate, (short)Channels,
+        //     BitsPerSample); // We are converting PCM format to WAV.
 
-        _memoryStream.Close();
-        _memoryStream.Flush();
-        _memoryStream.Dispose();
+        // _memoryStream.Close();
+        // _memoryStream.Flush();
+        // _memoryStream.Dispose();
     }
 
     delegate void AudioCallback(IntPtr data, int length);

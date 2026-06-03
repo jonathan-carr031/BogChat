@@ -1,26 +1,51 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Threading.Tasks;
+using BogChatDesktopClient.Models;
 
 namespace BogChatDesktopClient.Services;
 
-public class AuthentikService
-{
-    private readonly HttpClient _httpClient = new();
-    private const string AccessToken = "ucxszsMuVHVj5mxO0y8VqKymHfAPkomiiUcoLxERLJt9rShqcPal9vxza8FC";
-    private readonly Uri _baseUri = new("https://auth.whalestargroup.com");
+public class AuthentikService {
+    private const string ClientId = "pUeyTht8PcU1wBKBrv7IkxDHtQEmAyviGbTLyoaa";
 
-    public async Task<string> GetAuthentikStuff()
-    {
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
+    private const string ClientSecret =
+        "UkSXcwDw4QxDUe1lfXLFR8zCdFobvVVvB56qSKF25ylriykXSeTcWFcasXh6AtTDioajFFVo8US8uHWg0En3rYjkGltKU3vM7NQpz8oc2Auo2VLsaodCMVXH0OIj1SNp";
 
-        var apiUri = new Uri(_baseUri, "api/v3/core/authenticated_sessions/");
-        var response = await _httpClient.GetAsync(apiUri);
-        var content = await response.Content.ReadAsStringAsync();
+    private const string AuthorizationEndpoint = "https://auth.whalestargroup.com/application/o/authorize/";
+    private const string TokenEndpoint = "https://auth.whalestargroup.com/application/o/token/";
+    private const string RedirectUri = "http://localhost:5000/success/";
 
-        Console.WriteLine(content);
+    private readonly HttpClient _httpClient;
 
-        return content;
+    public AuthentikService(HttpClient httpClient) {
+        _httpClient = httpClient;
+    }
+
+    public async Task<AccessTokenResponse?> ExchangeCodeForToken(string accessCode) {
+        var kvp = new[] {
+            new KeyValuePair<string, string>("grant_type", "authorization_code"),
+            new KeyValuePair<string, string>("client_id", ClientId),
+            new KeyValuePair<string, string>("code", accessCode),
+            new KeyValuePair<string, string>("redirect_uri", RedirectUri),
+            new KeyValuePair<string, string>("client_secret", ClientSecret)
+        };
+
+        using var content = new FormUrlEncodedContent(kvp);
+        var response = await _httpClient.PostAsync(TokenEndpoint, content);
+
+        if (response.IsSuccessStatusCode) {
+            var jsonResult = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("\nAccess Token Response:");
+            Console.WriteLine(jsonResult);
+
+            var accessTokenResponse = JsonSerializer.Deserialize<AccessTokenResponse>(jsonResult);
+
+            return accessTokenResponse;
+        }
+
+        Console.WriteLine($"Token exchange failed: {response.StatusCode}");
+        return null;
     }
 }

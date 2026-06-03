@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BogChatDesktopClient.Data;
 using Updatum;
 
 namespace BogChatDesktopClient.ViewModels;
 
-internal class SplashScreenViewModel : ViewModelBase {
+internal class SplashScreenViewModel : PageViewModel {
     private static readonly UpdatumManager AppUpdater = new("jonathan-carr031", "BogChat") {
         InstallUpdateWindowsExeType = UpdatumWindowsExeType.Installer,
         InstallUpdateWindowsInstallerArguments = "/qb" // Displays a basic user interface for MSI package
@@ -15,6 +16,10 @@ internal class SplashScreenViewModel : ViewModelBase {
 
     private bool _isUpdateAvailable;
     private string _startUpMessage = string.Empty;
+
+    public SplashScreenViewModel() {
+        PageName = PageNames.SplashScreen;
+    }
 
     public string StartupMessage {
         get => _startUpMessage;

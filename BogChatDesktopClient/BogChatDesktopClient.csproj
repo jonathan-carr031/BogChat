@@ -31,6 +31,7 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2"/>
         <PackageReference Include="Emgu.CV.Bitmap" Version="4.13.0.5924"/>
+        <PackageReference Include="FluentIcons.Avalonia" Version="2.1.328"/>
         <PackageReference Include="LiveKit.AspNetCore.ServerSdk" Version="2.1.5"/>
         <PackageReference Include="Livekit.Rtc.Dotnet" Version="0.1.2"/>
         <PackageReference Include="Livekit.Server.Sdk.Dotnet" Version="1.2.1"/>
@@ -43,6 +44,7 @@
     <ItemGroup>
         <Folder Include="Assets\Audio\"/>
         <Folder Include="Views\Dialogs\"/>
+        <Folder Include="Views\Pages\"/>
     </ItemGroup>
 
     <ItemGroup>

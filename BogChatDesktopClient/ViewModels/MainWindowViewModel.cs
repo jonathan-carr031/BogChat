@@ -1,8 +1,10 @@
-﻿using System.Runtime.Versioning;
+﻿using System;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Factories;
 using BogChatDesktopClient.Messages;
+using BogChatDesktopClient.Services;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace BogChatDesktopClient.ViewModels;
@@ -33,7 +35,18 @@ public class MainWindowViewModel : ViewModelBase {
     }
 
     private async Task GetLoginStatus() {
-        var username = await DataSaver.FetchData();
+        var username = await DataSaver.FetchUserName();
+
+        Console.WriteLine($"Refresh Token: {await DataSaver.FetchRefreshToken()}");
+
+        var accessTokenResponse = await DataSaver.FetchAccessToken();
+
+        var accessToken = accessTokenResponse?.AccessToken;
+        if (accessToken != null) {
+            var token = JwtHandler.Decode(accessToken);
+            Console.WriteLine(token);
+            Console.WriteLine($"Is Token Expired? {JwtHandler.IsTokenExpired(accessToken)}");
+        }
 
         if (string.IsNullOrWhiteSpace(username)) {
             CurrentPage = _pageFactory.GetPageViewModel(PageNames.LoginPage);
