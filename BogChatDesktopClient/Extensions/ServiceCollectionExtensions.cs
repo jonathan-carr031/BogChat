@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Factories;
 using BogChatDesktopClient.Features.VideoCapture;
@@ -22,6 +23,7 @@ public static class ServiceCollectionExtensions {
     private static IServiceCollection AddCommonServices(this IServiceCollection services) {
         services.AddLogging();
         services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
+        services.AddTransient<HttpClient>();
 
         return services;
     }
@@ -54,6 +56,7 @@ public static class ServiceCollectionExtensions {
     private static IServiceCollection AddCustomServices(this IServiceCollection services) {
         services.AddTransient<LiveKitService>();
         services.AddTransient<IScreenCapture, CopyScreenCapture>();
+        services.AddTransient<AuthentikService>();
 
         return services;
     }

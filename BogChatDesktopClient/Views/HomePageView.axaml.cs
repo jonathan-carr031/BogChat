@@ -229,10 +229,16 @@ public partial class HomePageView : UserControl {
         }
     }
 
-    private void ResetStreamPaneSize(object? sender, PointerPressedEventArgs e) {
-        if (DataContext is HomePageViewModel homePageViewModel) {
-            homePageViewModel.MaximizedParticipant = null;
-            RestoreContentPane();
-        }
+    private void ResetStreamPaneSize(object? sender, RoutedEventArgs routedEventArgs) {
+        if (DataContext is not HomePageViewModel homePageViewModel) return;
+
+        homePageViewModel.MaximizedParticipant = null;
+        RestoreContentPane();
+    }
+
+    private void Logout_Event(object? sender, RoutedEventArgs e) {
+        if (DataContext is not HomePageViewModel homePageViewModel) return;
+        DataSaver.DeleteCredentials();
+        homePageViewModel.Logout();
     }
 }

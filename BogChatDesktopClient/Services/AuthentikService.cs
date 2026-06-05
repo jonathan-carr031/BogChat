@@ -48,4 +48,25 @@ public class AuthentikService {
         Console.WriteLine($"Token exchange failed: {response.StatusCode}");
         return null;
     }
+
+    public async Task<AccessTokenResponse?> GetNewToken(string refreshToken) {
+        var kvp = new[] {
+            new KeyValuePair<string, string>("grant_type", "refresh_token"),
+            new KeyValuePair<string, string>("client_id", ClientId),
+            new KeyValuePair<string, string>("refresh_token", refreshToken),
+            new KeyValuePair<string, string>("client_secret", ClientSecret),
+            new KeyValuePair<string, string>("scope", "profile%20offline_access")
+        };
+
+        using var content = new FormUrlEncodedContent(kvp);
+        var response = await _httpClient.PostAsync(TokenEndpoint, content);
+
+        Console.WriteLine(response);
+
+        if (!response.IsSuccessStatusCode) return null;
+
+        var jsonResult = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Get New Token Response: {jsonResult}");
+        return JsonSerializer.Deserialize<AccessTokenResponse>(jsonResult);
+    }
 }

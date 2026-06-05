@@ -11,7 +11,9 @@ using Avalonia.Threading;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Extensions;
 using BogChatDesktopClient.Helpers;
+using BogChatDesktopClient.Messages;
 using BogChatDesktopClient.Services;
+using CommunityToolkit.Mvvm.Messaging;
 using LiveKit.Rtc;
 using NAudio.Wave;
 using Bitmap = Avalonia.Media.Imaging.Bitmap;
@@ -25,6 +27,7 @@ namespace BogChatDesktopClient.ViewModels;
 public class HomePageViewModel : PageViewModel, IDisposable {
     private readonly LiveKitService _livekitService;
     private readonly MemoryStream _memoryStream = new();
+    private readonly IMessenger _messenger;
     private readonly DispatcherTimer _timer;
 
     private bool _isStreaming;
@@ -34,13 +37,15 @@ public class HomePageViewModel : PageViewModel, IDisposable {
     private Bitmap? _streamPreview;
     private string? _username;
 
-    public HomePageViewModel() {
+    public HomePageViewModel(IMessenger messenger) {
+        _messenger = messenger;
         Username = "Test UserName";
     }
 
-    public HomePageViewModel(LiveKitService livekitService) {
+    public HomePageViewModel(LiveKitService livekitService, IMessenger messenger) {
         PageName = PageNames.HomePage;
         _livekitService = livekitService;
+        _messenger = messenger;
         _livekitService.OnFrameCaptured += OnFrameCaptured;
 
         RoomParticipants = [];
@@ -332,5 +337,9 @@ public class HomePageViewModel : PageViewModel, IDisposable {
         RoomParticipants.Add(new RoomParticipant {
             Username = "User5"
         });
+    }
+
+    public void Logout() {
+        _messenger.Send(new LogoutMessage(true));
     }
 }

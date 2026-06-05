@@ -18,20 +18,26 @@
         <Panel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" ZIndex="1"
                IsVisible="{Binding HasMaximizedParticipant}"
                Background="#1f2f1f">
-            <Panel PointerPressed="ResetStreamPaneSize" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Panel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Image Stretch="Fill"
                        Source="{Binding MaximizedParticipant.VideoStream}" />
 
-                <TextBlock Text="{Binding MaximizedParticipant.Username}" Margin="20" Foreground="#dedede"></TextBlock>
-                <Button Content="Restore" />
+                <Border CornerRadius="6" Background="#000000" Margin="20" Padding="12 6" HorizontalAlignment="Left"
+                        VerticalAlignment="Top">
+                    <TextBlock Text="{Binding MaximizedParticipant.Username}"
+                               Foreground="#dedede" />
+                </Border>
+                <Button Click="ResetStreamPaneSize" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20"
+                        Background="#DD000000">
+                    <ic:FluentIcon Icon="ArrowMinimize" IconVariant="Regular" IconSize="Size32" Foreground="#FFFFFF" />
+                </Button>
             </Panel>
         </Panel>
 
         <!-- UserPanel -->
         <Border Grid.Column="0" Name="LeftPanel"
                 CornerRadius="0 6 6 0"
-                Background="#31402e"
-                BoxShadow="5 0 5 2 black">
+                Background="#31402e">
             <Grid RowDefinitions="*, Auto">
                 <StackPanel Grid.Row="0"
                             Orientation="Horizontal">
@@ -127,9 +133,14 @@
                 </StackPanel>
 
                 <Panel Grid.Row="1">
-                    <StackPanel Orientation="Horizontal" Margin="6" Spacing="3">
+                    <StackPanel Orientation="Horizontal" Margin="6" Spacing="3" VerticalAlignment="Center">
                         <ic:FluentIcon Icon="Person" IconVariant="Regular" IconSize="Size32" />
-                        <TextBlock Name="Username" Text="{Binding Username}" />
+                        <TextBlock VerticalAlignment="Center" Name="Username" Text="{Binding Username}" />
+                        <Border CornerRadius="6" Background="#33000000">
+                            <Button Click="Logout_Event">
+                                <ic:FluentIcon Icon="ArrowExit" IconVariant="Regular" IconSize="Size12"></ic:FluentIcon>
+                            </Button>
+                        </Border>
                     </StackPanel>
 
                 </Panel>

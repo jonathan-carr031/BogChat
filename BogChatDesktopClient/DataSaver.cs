@@ -21,6 +21,7 @@ public static class DataSaver {
 
     public static void SaveAccessToken(AccessTokenResponse accessToken) {
         var vault = new PasswordVault();
+        Console.WriteLine(JsonSerializer.Serialize(accessToken));
         var credentials =
             new PasswordCredential(ApplicationResourceName, "CurrentUser", JsonSerializer.Serialize(accessToken));
 
@@ -35,6 +36,7 @@ public static class DataSaver {
             return JsonSerializer.Deserialize<AccessTokenResponse>(storedCredentials.Password);
         }
         catch (Exception _) {
+            Console.WriteLine("Could not read the access token.");
             return null;
         }
     }
@@ -69,7 +71,6 @@ public static class DataSaver {
             return "";
         }
     }
-
 
     public static int EncryptDataToStream(byte[] Buffer, byte[] Entropy, DataProtectionScope Scope, Stream S) {
         if (Buffer == null)
@@ -136,5 +137,11 @@ public static class DataSaver {
 
         // Return the decrypted data
         return outBuffer;
+    }
+
+    public static void DeleteCredentials() {
+        var vault = new PasswordVault();
+        var storedCredentials = vault.Retrieve(ApplicationResourceName, "CurrentUser");
+        vault.Remove(storedCredentials);
     }
 }
