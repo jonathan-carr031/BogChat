@@ -4,9 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using Avalonia.Threading;
 using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Extensions;
@@ -36,9 +33,9 @@ public class HomePageViewModel : PageViewModel, IDisposable {
     private Room? _room;
     private Bitmap? _streamPreview;
     private string? _username;
+    private RoomParticipant? LocalRoomParticipant;
 
-    public HomePageViewModel(IMessenger messenger) {
-        _messenger = messenger;
+    public HomePageViewModel() {
         Username = "Test UserName";
     }
 
@@ -54,37 +51,16 @@ public class HomePageViewModel : PageViewModel, IDisposable {
 
         GetStreamableItems();
 
-        _ = GetRoomParticipants("room-name");
+        _ = GetRoomParticipants("the-bog");
 
         _timer = new DispatcherTimer {
             Interval = TimeSpan.FromSeconds(5)
         };
-        _timer.Tick += (sender, e) => { _ = GetRoomParticipants("room-name"); };
+        _timer.Tick += (sender, e) => { _ = GetRoomParticipants("the-bog"); };
         _timer.Start();
 
-        var self = new RoomParticipant {
-            Username = "self"
-        };
-        var trash = new RoomParticipant {
-            Username = "trash"
-        };
-        var azytzeen = new RoomParticipant {
-            Username = "azytzeen"
-        };
-        var ahr102 = new RoomParticipant {
-            Username = "ahr102"
-        };
-        var koldmilk = new RoomParticipant {
-            Username = "koldmilk"
-        };
-
-        RoomParticipants.Add(self);
-        RoomParticipants.Add(trash);
-        RoomParticipants.Add(azytzeen);
-        RoomParticipants.Add(ahr102);
-        RoomParticipants.Add(koldmilk);
         var timer = new DispatcherTimer {
-            Interval = TimeSpan.FromSeconds(5)
+            Interval = TimeSpan.FromSeconds(1)
         };
 
         timer.Tick += OnTimerOnTick;
@@ -138,21 +114,8 @@ public class HomePageViewModel : PageViewModel, IDisposable {
     }
 
     private void OnTimerOnTick(object? sender, EventArgs e) {
-        var user = RoomParticipants.First();
-        if (RoomParticipants.Count == 5) {
-            RoomParticipants.RemoveAt(RoomParticipants.Count - 1);
-            user.VideoStream = new Bitmap(@"C:\Users\jonat\Desktop\ScreenCapture\test_picture.jpeg");
-        }
-        else {
-            RoomParticipants.Add(new RoomParticipant {
-                Username = "koldmilk"
-            });
-
-            user.VideoStream = new WriteableBitmap(
-                new PixelSize(200, 200),
-                new Vector(96, 96),
-                PixelFormat.Bgra8888,
-                AlphaFormat.Premul);
+        if (LocalRoomParticipant != null) {
+            LocalRoomParticipant.VideoStream = new Bitmap(@"C:\Users\jonat\Desktop\ScreenCapture\test_picture.jpeg");
         }
     }
 
@@ -160,22 +123,34 @@ public class HomePageViewModel : PageViewModel, IDisposable {
         MaximizedParticipant = roomParticipant;
     }
 
-    public async Task JoinRoom() {
+    public async Task JoinRoom(string roomName) {
         if (Username != null) _livekitService.SetUsername(Username);
-        _room = await _livekitService.JoinRoom("room-name");
+        if (_room is not null && _room.Name == roomName) {
+            return;
+        }
+
+        _room = await _livekitService.JoinRoom(roomName);
         _room.TrackSubscribed += TrackSubscribed;
         _room.ActiveSpeakersChanged += SpeakerChanged;
         _room.TrackMuted += OnTrackMuted;
-        _ = GetRoomParticipants("room-name");
+        _ = GetRoomParticipants(roomName);
         await _livekitService.ConnectMicrophone();
+
+        LocalRoomParticipant = new RoomParticipant {
+            Username = Username,
+            UserId = Username
+        };
+
+        RoomParticipants.Add(LocalRoomParticipant);
     }
 
     public async Task LeaveRoom() {
         await _livekitService.LeaveRoom();
         await _memoryStream.DisposeAsync();
+        _room = null;
 
         RoomParticipants.Clear();
-        _ = GetRoomParticipants("room-name");
+        _ = GetRoomParticipants("the-bog");
     }
 
     private void OnTrackMuted(object? sender, TrackMutedEventArgs e) {
@@ -241,7 +216,10 @@ public class HomePageViewModel : PageViewModel, IDisposable {
 
     private void OnFrameCaptured(VideoFrame videoFrame) {
         var videoFrameBitmap = ImageProcessor.ConvertToBitmap(videoFrame);
-        StreamPreview = videoFrameBitmap;
+        if (LocalRoomParticipant != null) {
+            LocalRoomParticipant.VideoStream = videoFrameBitmap;
+        }
+        // StreamPreview = videoFrameBitmap;
     }
 
     private async void TrackSubscribed(object? sender, TrackSubscribedEventArgs eventArgs) {
@@ -258,10 +236,8 @@ public class HomePageViewModel : PageViewModel, IDisposable {
                 RoomParticipants.Add(roomParticipant);
             }
 
-            //TODO: Check for user stop streaming
             switch (eventArgs.Track) {
                 case RemoteVideoTrack: {
-                    Console.WriteLine("Is a Video Track");
                     await using var videoStream = new VideoStream(eventArgs.Track);
 
                     await foreach (var frame in videoStream.WithCancellation(CancellationToken.None)) {
@@ -271,13 +247,10 @@ public class HomePageViewModel : PageViewModel, IDisposable {
                     break;
                 }
                 case RemoteAudioTrack: {
-                    Console.WriteLine("Is an Audio Track");
                     await using var audioStream = new AudioStream(eventArgs.Track);
 
                     var sampleRate = (int)audioStream.SampleRate;
-                    // var sampleRate = (int)44100;
                     var channels = (int)audioStream.NumChannels;
-                    // var channels = (int)1;
                     var waveFormat = new WaveFormat(sampleRate, channels);
                     var bufferedWaveProvider = new BufferedWaveProvider(waveFormat) {
                         DiscardOnBufferOverflow = true
@@ -289,11 +262,6 @@ public class HomePageViewModel : PageViewModel, IDisposable {
                     waveOut.Play();
 
                     await foreach (var frame in audioStream.WithCancellation(CancellationToken.None)) {
-                        // Console.WriteLine(@"\=====================================/");
-                        // Console.WriteLine($"Track: {eventArgs.Track.Name}");
-                        // Console.WriteLine($"Audio Info: {audioStream.SampleRate} - {audioStream.NumChannels}");
-                        // Console.WriteLine($"Bytes Received: {frame.Frame.DataBytes.Length}");
-                        // Console.WriteLine(@"/=====================================\");
                         bufferedWaveProvider.AddSamples(frame.Frame.DataBytes, 0, frame.Frame.DataBytes.Length);
                     }
 
@@ -319,24 +287,6 @@ public class HomePageViewModel : PageViewModel, IDisposable {
 
     public void UnmuteVoice() {
         _livekitService.ToggleMute();
-    }
-
-    public async Task AddParticipants() {
-        RoomParticipants.Add(new RoomParticipant {
-            Username = "User1"
-        });
-        RoomParticipants.Add(new RoomParticipant {
-            Username = "User2"
-        });
-        RoomParticipants.Add(new RoomParticipant {
-            Username = "User3"
-        });
-        RoomParticipants.Add(new RoomParticipant {
-            Username = "User4"
-        });
-        RoomParticipants.Add(new RoomParticipant {
-            Username = "User5"
-        });
     }
 
     public void Logout() {

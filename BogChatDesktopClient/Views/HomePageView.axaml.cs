@@ -64,15 +64,13 @@ public partial class HomePageView : UserControl {
     private void JoinRoom(object? sender, RoutedEventArgs e) {
         if (string.IsNullOrWhiteSpace(Username.Text)) return;
 
-        LeaveRoomButton.IsVisible = true;
-        JoinRoomButton.IsVisible = false;
-        ContentPanel.IsVisible = true;
+        // JoinRoomButton.IsVisible = false;
+        VideoPanel.IsVisible = true;
     }
 
     private void LeaveRoom(object? sender, RoutedEventArgs e) {
         JoinRoomButton.IsVisible = true;
-        LeaveRoomButton.IsVisible = false;
-        ContentPanel.IsVisible = false;
+        VideoPanel.IsVisible = false;
     }
 
     // private void InitializeGrid() {
