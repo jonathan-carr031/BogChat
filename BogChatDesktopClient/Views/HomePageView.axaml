@@ -29,7 +29,7 @@
                 </Border>
                 <Button Click="ResetStreamPaneSize" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20"
                         Background="#DD000000">
-                    <ic:FluentIcon Icon="ArrowMinimize" IconVariant="Regular" IconSize="Size32" Foreground="#FFFFFF" />
+                    <ic:FluentIcon Icon="ArrowMinimize" Foreground="#FFFFFF" />
                 </Button>
             </Panel>
         </Panel>
@@ -43,21 +43,47 @@
                             Orientation="Horizontal">
                     <StackPanel Name="UserPanel"
                                 Margin="12">
-                        <Button Name="JoinRoomButton"
-                                Margin="0 6"
-                                Click="JoinRoom"
-                                Command="{Binding JoinRoom}">
-                            <StackPanel Orientation="Horizontal">
-
-                                <TextBlock Text="The Bog" />
-                            </StackPanel>
-                        </Button>
-                        <Button Name="LeaveRoomButton"
-                                Content="Leave The Bog"
-                                Margin="0 6"
-                                Click="LeaveRoom"
-                                IsVisible="False"
-                                Command="{Binding LeaveRoom}" />
+                        <ItemsRepeater ItemsSource="{Binding Channels}">
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <Button Name="JoinRoomButton"
+                                                Margin="0 6"
+                                                Click="JoinRoom"
+                                                Command="{Binding $parent[ItemsRepeater].((viewModels:HomePageViewModel)DataContext).JoinRoom}"
+                                                CommandParameter="{Binding }">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <ItemsRepeater ItemsSource="{Binding Participants}">
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Margin="0,10,0,0"
+                                                            CornerRadius="5"
+                                                            BorderBrush="#006600" BorderThickness="1"
+                                                            Background="#006600"
+                                                            Padding="5">
+                                                        <StackPanel Orientation="Vertical">
+                                                            <TextBlock Text="{Binding}"></TextBlock>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                        <!-- <Button Name="JoinRoomButton" -->
+                        <!--         Margin="0 6" -->
+                        <!--         Click="JoinRoom" -->
+                        <!--         Command="{Binding JoinRoom}" -->
+                        <!--         CommandParameter="the-bog"> -->
+                        <!--     <StackPanel Orientation="Horizontal"> -->
+                        <!--         <TextBlock Text="The Bog" /> -->
+                        <!--     </StackPanel> -->
+                        <!-- </Button> -->
                         <ItemsRepeater ItemsSource="{Binding RoomPeople}">
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate>
@@ -73,63 +99,8 @@
                                 </DataTemplate>
                             </ItemsRepeater.ItemTemplate>
                         </ItemsRepeater>
-                        <Button Content="Add Participants" Command="{Binding AddParticipants}"></Button>
                         <TextBlock Name="VersionNumber" Text="No Version Set" TextWrapping="Wrap" MaxWidth="100"></TextBlock>
                     </StackPanel>
-
-
-                    <DockPanel Name="ContentPanel"
-                               Margin="12"
-                               IsVisible="False">
-                        <StackPanel Orientation="Vertical">
-                            <ItemsRepeater ItemsSource="{Binding RoomParticipants}">
-                                <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate>
-                                        <UserCard Margin="20"
-                                                  RoomParticipant="{Binding}" />
-                                    </DataTemplate>
-                                </ItemsRepeater.ItemTemplate>
-                            </ItemsRepeater>
-
-                            <Border CornerRadius="8"
-                                    ClipToBounds="True"
-                                    BorderBrush="#226622"
-                                    BorderThickness="1"
-                                    Background="#131313">
-                                <Border CornerRadius="12"
-                                        ClipToBounds="True">
-                                    <Panel Name="UserStreamPreviewCard">
-                                        <Image Name="DisplayImage"
-                                               Width="213"
-                                               Height="120"
-                                               Stretch="Fill"
-                                               RenderOptions.BitmapInterpolationMode="LowQuality"
-                                               Source="{Binding StreamPreview}" />
-
-                                        <TextBlock Text="Stream Preview" Margin="12"></TextBlock>
-                                    </Panel>
-                                </Border>
-                            </Border>
-
-                            <Button Name="MuteButton"
-                                    Click="Mute"
-                                    Command="{Binding MuteVoice}"
-                                    Content="Mute" />
-                            <Button Name="UnmuteButton"
-                                    Click="UnMute"
-                                    Command="{Binding UnmuteVoice}"
-                                    Content="Unmute"
-                                    IsVisible="False" />
-                            <Button Name="StartStreamButton"
-                                    Command="{Binding RecordApplication}"
-                                    Content="Stream Screen"
-                                    IsVisible="{Binding !IsStreaming}" />
-                            <Button Name="StopStreamButton"
-                                    Command="{Binding StopStreaming}"
-                                    Content="Stop Streaming"
-                                    IsVisible="{Binding IsStreaming}" />
-                        </StackPanel>
-                    </DockPanel>
                 </StackPanel>
 
                 <Panel Grid.Row="1">
@@ -148,38 +119,107 @@
         </Border>
 
         <!-- Content -->
-        <ScrollViewer Grid.Column="1" HorizontalAlignment="Center">
-            <ItemsRepeater ItemsSource="{Binding RoomParticipants}">
-                <ItemsRepeater.Layout>
-                    <WrapLayout Orientation="Horizontal" HorizontalSpacing="10" VerticalSpacing="10" />
-                </ItemsRepeater.Layout>
+        <Grid Grid.Column="1" Name="ContentPanel"
+              RowDefinitions="Auto, Auto">
+            <!-- Video Panel -->
+            <Grid Grid.Row="0"
+                  Name="VideoPanel"
+                  IsVisible="False"
+                  RowDefinitions="*, Auto">
+                <ScrollViewer Grid.Row="0">
+                    <ItemsRepeater ItemsSource="{Binding RoomParticipants}">
+                        <ItemsRepeater.Layout>
+                            <WrapLayout Orientation="Horizontal" HorizontalSpacing="10" VerticalSpacing="10" />
+                        </ItemsRepeater.Layout>
 
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate>
-                        <Border
-                            CornerRadius="8"
-                            ClipToBounds="True"
-                            BorderBrush="{Binding BorderColor}"
-                            BorderThickness="4"
-                            Width="600"
-                            Height="338"
-                            Background="#131313"
-                            PointerPressed="Enlarge">
-                            <Border CornerRadius="12"
-                                    ClipToBounds="True">
-                                <Panel>
-                                    <Image Name="DisplayImage"
-                                           Stretch="Fill"
-                                           Source="{Binding VideoStream}" />
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    CornerRadius="8"
+                                    ClipToBounds="True"
+                                    BorderBrush="{Binding BorderColor}"
+                                    BorderThickness="4"
+                                    Width="600"
+                                    Height="338"
+                                    Background="#131313"
+                                    PointerPressed="Enlarge">
+                                    <Border CornerRadius="12"
+                                            ClipToBounds="True">
+                                        <Panel>
+                                            <Image Name="DisplayImage"
+                                                   Stretch="Fill"
+                                                   Source="{Binding VideoStream}" />
 
-                                    <TextBlock Text="{Binding Username}" Margin="20" Foreground="#dedede"></TextBlock>
-                                </Panel>
-                            </Border>
-                        </Border>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
-        </ScrollViewer>
+                                            <TextBlock Text="{Binding Username}" Margin="20" Foreground="#dedede"></TextBlock>
+                                        </Panel>
+                                    </Border>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Name="MuteButton"
+                            Click="Mute"
+                            Command="{Binding MuteVoice}">
+                        <ic:FluentIcon Icon="MicOff" />
+                    </Button>
+                    <Button Name="UnmuteButton"
+                            Click="UnMute"
+                            Command="{Binding UnmuteVoice}"
+                            IsVisible="False">
+                        <ic:FluentIcon Icon="Mic" />
+                    </Button>
+                    <Button Name="StartStreamButton"
+                            Command="{Binding RecordApplication}"
+                            IsVisible="{Binding !IsStreaming}">
+                        <ic:FluentIcon Icon="ShareScreenStart" />
+                    </Button>
+                    <Button Name="StopStreamButton"
+                            Command="{Binding StopStreaming}"
+                            IsVisible="{Binding IsStreaming}">
+                        <ic:FluentIcon Icon="ShareScreenStop" />
+                    </Button>
+                    <Border CornerRadius="12"
+                            ClipToBounds="True">
+                        <Button Name="LeaveCallButton"
+                                Background="#EE9999"
+                                Click="LeaveRoom"
+                                Command="{Binding LeaveRoom}"
+                                IsVisible="True">
+                            <ic:FluentIcon Icon="CallEnd" />
+                        </Button>
+                    </Border>
+                </StackPanel>
+            </Grid>
+            <!-- Text Panel -->
+            <Grid Grid.Row="1"
+                  Name="TextPanel"
+                  IsVisible="False"
+                  RowDefinitions="*, Auto">
+                <ScrollViewer Grid.Row="0">
+                    <StackPanel>
+                        <TextBlock Text="This is a message from a user"></TextBlock>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Border Grid.Row="1"
+                        Background="#1f1f1f">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBox Grid.Column="0"
+                                 HorizontalAlignment="Stretch"
+                                 Background="Transparent"
+                                 Padding="24"
+                                 PlaceholderText="Message" />
+                        <Button Grid.Column="1" Padding="24"
+                                Background="Transparent">
+                            <ic:FluentIcon Icon="Send" IconVariant="Regular" IconSize="Size32" />
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
 
         <StackPanel Grid.Column="2" Name="RightPanel">
             <ItemsRepeater ItemsSource="{Binding StreamableItems}">

@@ -44,8 +44,6 @@ public partial class VideoGridTest : UserControl {
         Console.WriteLine($"NotifyCollectionChangedEventArgs: {e}");
     }
 
-    private void OnRoomParticipantListOnCollectionChanged() { }
-
 
     private void InitializeGrid() {
         VideoGrid.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -77,9 +75,9 @@ public partial class VideoGridTest : UserControl {
                 }
 
                 var child = new StreamPane(new RoomParticipant {
-                    Username = _users[count],
+                    Username = _users[count]
                 }) {
-                    Margin = new Thickness(12),
+                    Margin = new Thickness(12)
                 };
 
                 child.PointerPressed += StreamClicked;

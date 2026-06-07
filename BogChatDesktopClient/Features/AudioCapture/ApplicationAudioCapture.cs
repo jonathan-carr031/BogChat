@@ -9,7 +9,6 @@ public static class ApplicationAudioCapture {
     public const ushort Channels = 1;
     public const int SampleRate = 44100;
     private const int BitsPerSample = 16;
-    private static MemoryStream _memoryStream = new();
 
     public static Action<byte[], int>? OnAudioDataReceived;
 
@@ -29,22 +28,17 @@ public static class ApplicationAudioCapture {
         Marshal.Copy(data, buffer, 0, length);
 
         memoryStream.Write(buffer, 0, buffer.Length);
-        // _memoryStream.Write(buffer, 0, buffer.Length);
 
         OnAudioDataReceived?.Invoke(buffer, length);
     }
 
     public static void CaptureApplicationAudio(uint processId) {
-        _memoryStream = new MemoryStream();
-
         SetAudioCallback(OnAudioReceived);
 
         StartCaptureAsync(processId, true, Channels, SampleRate, BitsPerSample);
     }
 
     public static void CaptureDesktopAudio() {
-        _memoryStream = new MemoryStream();
-
         SetAudioCallback(OnAudioReceived);
 
         var processes = WindowsProcessManager.GetOwnProcess();
@@ -68,7 +62,7 @@ public static class ApplicationAudioCapture {
         // _memoryStream.Dispose();
     }
 
-    delegate void AudioCallback(IntPtr data, int length);
+    private delegate void AudioCallback(IntPtr data, int length);
 
     private static class WavConverter {
         public static void WriteWavFile(MemoryStream pcmStream, string outputPath, int sampleRate, short channels,

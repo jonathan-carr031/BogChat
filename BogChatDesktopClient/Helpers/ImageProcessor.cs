@@ -40,7 +40,7 @@ public static class ImageProcessor {
             for (var y = 0; y < height; y++) {
                 for (var x = 0; x < width; x++) {
                     var yIdx = y * width + x;
-                    var uvIdx = (y / 2) * (width / 2) + (x / 2);
+                    var uvIdx = y / 2 * (width / 2) + x / 2;
 
                     var yByte = data[yPlane + yIdx];
                     var uByte = data[uPlane + uvIdx];
@@ -54,7 +54,7 @@ public static class ImageProcessor {
                     var g = (byte)Math.Max(0, Math.Min(255, (298 * c - 100 * d - 208 * e + 128) >> 8));
                     var b = (byte)Math.Max(0, Math.Min(255, (298 * c + 516 * d + 128) >> 8));
 
-                    var pixelIdx = (y * bitmapData.Stride) + (x * 4);
+                    var pixelIdx = y * bitmapData.Stride + x * 4;
                     ptr[pixelIdx] = b;
                     ptr[pixelIdx + 1] = g;
                     ptr[pixelIdx + 2] = r;
