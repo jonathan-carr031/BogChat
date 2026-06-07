@@ -200,12 +200,12 @@ public class LiveKitService {
 
     private async Task StreamApplicationAudio(uint processId) {
         //Initialize Audio Source
-        ApplicationAudioCapture.OnAudioDataReceived = ((bytes, i) => {
+        ApplicationAudioCapture.OnAudioDataReceived = (bytes, i) => {
             var audioFrame = new AudioFrame(bytes, ApplicationAudioCapture.SampleRate,
                 ApplicationAudioCapture.Channels, 441);
 
             _ = _applicationAudioSource?.CaptureFrameAsync(audioFrame);
-        });
+        };
         _ = Task.Run(() => { ApplicationAudioCapture.CaptureApplicationAudio(processId); });
         _applicationAudioSource = new AudioSource(ApplicationAudioCapture.SampleRate,
             ApplicationAudioCapture.Channels);

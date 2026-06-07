@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia;
@@ -59,8 +60,6 @@ public class App : Application {
     }
 
     private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e) {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
-            // var vm = (MainWindowViewModel)desktop.MainWindow?.DataContext!;
-        }
+        Console.WriteLine("Exiting...");
     }
 }

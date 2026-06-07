@@ -5,6 +5,7 @@ using BogChatDesktopClient.Factories;
 using BogChatDesktopClient.Features.VideoCapture;
 using BogChatDesktopClient.ScreenCapture;
 using BogChatDesktopClient.Services;
+using BogChatDesktopClient.Services.ApiServices;
 using BogChatDesktopClient.ViewModels;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +58,7 @@ public static class ServiceCollectionExtensions {
         services.AddTransient<LiveKitService>();
         services.AddTransient<IScreenCapture, CopyScreenCapture>();
         services.AddTransient<AuthentikService>();
+        services.AddTransient<ApiService>();
 
         return services;
     }
