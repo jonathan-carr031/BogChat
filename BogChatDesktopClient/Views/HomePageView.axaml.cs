@@ -25,30 +25,6 @@ public partial class HomePageView : UserControl {
 
         VersionNumber.Text = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion;
-
-        var self = new RoomParticipant {
-            Username = "self"
-        };
-        var trash = new RoomParticipant {
-            Username = "trash"
-        };
-        var azytzeen = new RoomParticipant {
-            Username = "azytzeen"
-        };
-        var ahr102 = new RoomParticipant {
-            Username = "ahr102"
-        };
-        var koldmilk = new RoomParticipant {
-            Username = "koldmilk"
-        };
-
-        _users.Add(self);
-        _users.Add(trash);
-        _users.Add(azytzeen);
-        _users.Add(ahr102);
-        _users.Add(koldmilk);
-
-        // InitializeGrid();
     }
 
     private void Mute(object? sender, RoutedEventArgs routedEventArgs) {
@@ -63,65 +39,13 @@ public partial class HomePageView : UserControl {
 
     private void JoinRoom(object? sender, RoutedEventArgs e) {
         if (string.IsNullOrWhiteSpace(Username.Text)) return;
-
-        // JoinRoomButton.IsVisible = false;
         VideoPanel.IsVisible = true;
     }
 
     private void LeaveRoom(object? sender, RoutedEventArgs e) {
-        JoinRoomButton.IsVisible = true;
+        // JoinRoomButton.IsVisible = true;
         VideoPanel.IsVisible = false;
     }
-
-    // private void InitializeGrid() {
-    //     VideoGrid.Background = Brush.Parse("Transparent");
-    //
-    //     var columns = Math.Ceiling(Math.Sqrt(_users.Count));
-    //     var rows = (int)Math.Ceiling(_users.Count / columns);
-    //     var unitsPerColumn = Math.Max(_users.Count % columns, 1);
-    //
-    //     for (var c = 0; c < columns * unitsPerColumn; c++) {
-    //         VideoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-    //     }
-    //
-    //     for (var r = 0; r < rows; r++) {
-    //         VideoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
-    //     }
-    //
-    //     var unitsPerRow = unitsPerColumn * columns;
-    //     var lastRowCount = _users.Count % columns;
-    //     if (lastRowCount == 0) lastRowCount = columns;
-    //     var spanningForFinalRow = unitsPerRow / lastRowCount;
-    //
-    //     var count = 0;
-    //     for (var row = 0; row < rows; row++) {
-    //         for (var column = 0; column < columns; column++) {
-    //             if (count >= _users.Count) {
-    //                 break;
-    //             }
-    //
-    //             var child = new StreamPane(_users[count]) {
-    //                 Margin = new Thickness(12),
-    //             };
-    //
-    //             child.PointerPressed += StreamClicked;
-    //
-    //             VideoGrid.Children.Add(child);
-    //
-    //             Grid.SetRow(child, row);
-    //
-    //             var spanningColumns = (int)unitsPerColumn;
-    //             if (row == rows - 1) {
-    //                 spanningColumns = (int)spanningForFinalRow;
-    //             }
-    //
-    //             Grid.SetColumn(child, column * spanningColumns);
-    //             Grid.SetColumnSpan(child, spanningColumns);
-    //
-    //             count++;
-    //         }
-    //     }
-    // }
 
     private void StreamClicked(object? sender, PointerPressedEventArgs e) {
         if (e.Source is Border userCard) {

@@ -21,16 +21,13 @@ public static class OAuthService {
         "<html><body><h2>Authentication successful! You can close this window.</h2></body></html>";
 
     public static async Task<AccessTokenResponse?> StartOAuth() {
-        // 1. Generate unique state to prevent CSRF
         var state = Guid.NewGuid().ToString("N");
 
-        // 2. Start local HTTP listener
         using var listener = new HttpListener();
         listener.Prefixes.Add(RedirectUri);
         listener.Start();
         Console.WriteLine("Listening for browser redirect...");
 
-        // 3. Build the authorization URL
         var authUrl = $"{AuthorizationEndpoint}?" +
                       $"response_type=code&" +
                       $"client_id={HttpUtility.UrlEncode(ClientId)}&" +
@@ -38,18 +35,14 @@ public static class OAuthService {
                       $"scope=profile%20offline_access&" +
                       $"state={state}";
 
-        // 4. Open the system browser safely across Windows/Mac/Linux
         OpenBrowser(authUrl);
 
-        // 5. Wait for the browser to redirect back to localhost
         var context = await listener.GetContextAsync();
         var request = context.Request;
 
-        // Extract authorization parameters
         var code = request.QueryString["code"];
         var incomingState = request.QueryString["state"];
 
-        // 6. Return a friendly HTML response page to the user
         var response = context.Response;
 
         var buffer = Encoding.UTF8.GetBytes(ResponseString);
@@ -60,7 +53,6 @@ public static class OAuthService {
 
         listener.Stop();
 
-        // 7. Validate state
         if (incomingState != state) {
             Console.WriteLine("Security error: State mismatch!");
             return null;
@@ -68,7 +60,6 @@ public static class OAuthService {
 
         if (!string.IsNullOrEmpty(code)) {
             Console.WriteLine($"Authorization code received: {code}");
-            // 8. Exchange code for access token via backend POST
             return await ExchangeCodeForTokenAsync(code);
         }
 
