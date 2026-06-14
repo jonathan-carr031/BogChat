@@ -9,6 +9,9 @@ using BogChatDesktopClient.Services.ApiServices;
 using BogChatDesktopClient.ViewModels;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
+using HomePageViewModel = BogChatDesktopClient.ViewModels.Pages.HomePageViewModel;
+using LoginPageViewModel = BogChatDesktopClient.ViewModels.Pages.LoginPageViewModel;
+using PageViewModel = BogChatDesktopClient.ViewModels.Pages.PageViewModel;
 
 namespace BogChatDesktopClient.Extensions;
 
@@ -33,6 +36,7 @@ public static class ServiceCollectionExtensions {
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<HomePageViewModel>();
         services.AddTransient<LoginPageViewModel>();
+        services.AddTransient<SplashScreenViewModel>();
         services.AddTransient<StreamPaneViewModel>();
 
         return services;
@@ -45,9 +49,10 @@ public static class ServiceCollectionExtensions {
     }
 
     private static IServiceCollection AddDelegates(this IServiceCollection services) {
-        services.AddSingleton<Func<PageNames, PageViewModel>>(provider => pageName => pageName switch {
-            PageNames.HomePage => provider.GetRequiredService<HomePageViewModel>(),
-            PageNames.LoginPage => provider.GetRequiredService<LoginPageViewModel>(),
+        services.AddSingleton<Func<PageName, PageViewModel>>(provider => pageName => pageName switch {
+            PageName.HomePage => provider.GetRequiredService<HomePageViewModel>(),
+            PageName.LoginPage => provider.GetRequiredService<LoginPageViewModel>(),
+            PageName.SplashScreen => provider.GetRequiredService<SplashScreenViewModel>(),
             _ => throw new ArgumentOutOfRangeException(nameof(pageName), pageName, null)
         });
 
@@ -59,6 +64,8 @@ public static class ServiceCollectionExtensions {
         services.AddTransient<IScreenCapture, CopyScreenCapture>();
         services.AddTransient<AuthentikService>();
         services.AddTransient<ApiService>();
+        services.AddSingleton<IAppSessionService, AppSessionService>();
+        services.AddSingleton<OAuthService>();
 
         return services;
     }

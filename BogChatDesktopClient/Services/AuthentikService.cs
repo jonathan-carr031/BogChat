@@ -37,7 +37,7 @@ public class AuthentikService {
 
         if (response.IsSuccessStatusCode) {
             var jsonResult = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("\nAccess Token Response:");
+            Console.WriteLine("Access Token Response:");
             Console.WriteLine(jsonResult);
 
             var accessTokenResponse = JsonSerializer.Deserialize<AccessTokenResponse>(jsonResult);
@@ -61,12 +61,9 @@ public class AuthentikService {
         using var content = new FormUrlEncodedContent(kvp);
         var response = await _httpClient.PostAsync(TokenEndpoint, content);
 
-        Console.WriteLine(response);
-
         if (!response.IsSuccessStatusCode) return null;
 
         var jsonResult = await response.Content.ReadAsStringAsync();
-        Console.WriteLine($"Get New Token Response: {jsonResult}");
         return JsonSerializer.Deserialize<AccessTokenResponse>(jsonResult);
     }
 }

@@ -14,14 +14,13 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
-using Resource = SharpDX.DXGI.Resource;
 using ResultCode = SharpDX.DXGI.ResultCode;
 
 namespace BogChatDesktopClient.Features.VideoCapture;
 
 public class GpuImageCapture : IScreenCapture {
+    private readonly List<double> _frameTimes = [];
     private Factory1 _factory;
-    private List<double> _frameTimes = [];
     private bool _running, _initialized;
     private DispatcherTimer _timer;
 
@@ -72,8 +71,7 @@ public class GpuImageCapture : IScreenCapture {
             stopwatch.Restart();
             using var duplicatedOutput = output1.DuplicateOutput(device);
             try {
-                Resource screenResource;
-                duplicatedOutput.TryAcquireNextFrame(8, out _, out screenResource);
+                duplicatedOutput.TryAcquireNextFrame(8, out _, out var screenResource);
                 if (screenResource == null) {
                     // continue;
                     return;

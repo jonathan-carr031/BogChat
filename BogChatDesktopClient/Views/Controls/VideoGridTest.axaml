@@ -4,7 +4,5 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080"
              x:Class="BogChatDesktopClient.Views.VideoGridTest">
-    <Grid Name="VideoGrid">
-
-    </Grid>
+    <Grid Name="VideoGrid" />
 </UserControl>

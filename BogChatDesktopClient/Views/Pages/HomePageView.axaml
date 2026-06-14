@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:BogChatDesktopClient.ViewModels"
              mc:Ignorable="d" d:DesignWidth="2560" d:DesignHeight="1440"
              xmlns:ic="using:FluentIcons.Avalonia"
-             x:Class="BogChatDesktopClient.Views.HomePageView"
-             x:DataType="viewModels:HomePageViewModel">
+             xmlns:pages="clr-namespace:BogChatDesktopClient.ViewModels.Pages"
+             x:Class="BogChatDesktopClient.Views.Pages.HomePageView"
+             x:DataType="pages:HomePageViewModel">
 
     <Design.DataContext>
-        <viewModels:HomePageViewModel />
+        <pages:HomePageViewModel />
     </Design.DataContext>
 
     <!-- MainPage -->
@@ -20,11 +20,11 @@
                Background="#1f2f1f">
             <Panel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Image Stretch="Fill"
-                       Source="{Binding MaximizedParticipant.VideoStream}" />
+                       Source="{Binding MaximizedParticipant?.VideoStream}" />
 
                 <Border CornerRadius="6" Background="#000000" Margin="20" Padding="12 6" HorizontalAlignment="Left"
                         VerticalAlignment="Top">
-                    <TextBlock Text="{Binding MaximizedParticipant.Username}"
+                    <TextBlock Text="{Binding MaximizedParticipant?.Username}"
                                Foreground="#dedede" />
                 </Border>
                 <Button Click="ResetStreamPaneSize" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20"
@@ -50,7 +50,7 @@
                                         <Button Name="JoinRoomButton"
                                                 Margin="0 6"
                                                 Click="JoinRoom"
-                                                Command="{Binding $parent[ItemsRepeater].((viewModels:HomePageViewModel)DataContext).JoinRoom}"
+                                                Command="{Binding $parent[ItemsRepeater].((pages:HomePageViewModel)DataContext)?.JoinRoom}"
                                                 CommandParameter="{Binding }">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding Name}" />
@@ -75,15 +75,6 @@
                                 </DataTemplate>
                             </ItemsRepeater.ItemTemplate>
                         </ItemsRepeater>
-                        <!-- <Button Name="JoinRoomButton" -->
-                        <!--         Margin="0 6" -->
-                        <!--         Click="JoinRoom" -->
-                        <!--         Command="{Binding JoinRoom}" -->
-                        <!--         CommandParameter="the-bog"> -->
-                        <!--     <StackPanel Orientation="Horizontal"> -->
-                        <!--         <TextBlock Text="The Bog" /> -->
-                        <!--     </StackPanel> -->
-                        <!-- </Button> -->
                         <ItemsRepeater ItemsSource="{Binding RoomPeople}">
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate>
@@ -199,9 +190,17 @@
                   IsVisible="False"
                   RowDefinitions="*, Auto">
                 <ScrollViewer Grid.Row="0">
-                    <StackPanel>
-                        <TextBlock Text="This is a message from a user"></TextBlock>
-                    </StackPanel>
+                    <ItemsRepeater ItemsSource="{Binding ChannelMessages}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Orientation="Vertical" Spacing="10" />
+                        </ItemsRepeater.Layout>
+
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" />
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
                 </ScrollViewer>
 
                 <Border Grid.Row="1"
@@ -218,6 +217,10 @@
                         </Button>
                     </Grid>
                 </Border>
+
+                <Panel Grid.Row="0" Grid.RowSpan="2">
+                    <ContentControl Content="{Binding CurrentTextChannel}"></ContentControl>
+                </Panel>
             </Grid>
         </Grid>
 
@@ -231,7 +234,7 @@
                                 Padding="5">
                             <StackPanel Orientation="Horizontal">
                                 <Button
-                                    Command="{Binding $parent[ItemsRepeater].((viewModels:HomePageViewModel)DataContext).StreamableItemClickEvent}"
+                                    Command="{Binding $parent[ItemsRepeater].((pages:HomePageViewModel)DataContext)?.StreamableItemClickEvent}"
                                     CommandParameter="{Binding}"
                                     Content="{Binding WindowTitle}" />
                             </StackPanel>

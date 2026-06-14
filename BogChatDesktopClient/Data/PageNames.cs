@@ -1,6 +1,6 @@
 ﻿namespace BogChatDesktopClient.Data;
 
-public enum PageNames {
+public enum PageName {
     SplashScreen,
     LoginPage,
     HomePage

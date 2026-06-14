@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 using BogChatDesktopClient.Models;
 
 namespace BogChatDesktopClient.Services;
 
-public static class OAuthService {
+public class OAuthService(AuthentikService authentikService) {
     private const string ClientId = "pUeyTht8PcU1wBKBrv7IkxDHtQEmAyviGbTLyoaa";
     private const string AuthorizationEndpoint = "https://auth.whalestargroup.com/application/o/authorize/";
     private const string TokenEndpoint = "https://auth.whalestargroup.com/application/o/token/";
@@ -20,7 +17,8 @@ public static class OAuthService {
     private const string ResponseString =
         "<html><body><h2>Authentication successful! You can close this window.</h2></body></html>";
 
-    public static async Task<AccessTokenResponse?> StartOAuth() {
+
+    public async Task<AccessTokenResponse?> StartOAuth() {
         var state = Guid.NewGuid().ToString("N");
 
         using var listener = new HttpListener();
@@ -60,19 +58,18 @@ public static class OAuthService {
 
         if (!string.IsNullOrEmpty(code)) {
             Console.WriteLine($"Authorization code received: {code}");
-            return await ExchangeCodeForTokenAsync(code);
+            return await authentikService.ExchangeCodeForToken(code);
         }
 
 
         return null;
     }
 
-    private static void OpenBrowser(string url) {
+    private void OpenBrowser(string url) {
         try {
             Process.Start(url);
         }
         catch {
-            // Fallback framework configuration for .NET Core apps on alternative OS environments
             if (OperatingSystem.IsWindows()) {
                 Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
             }
@@ -86,33 +83,5 @@ public static class OAuthService {
                 throw;
             }
         }
-    }
-
-    private static async Task<AccessTokenResponse?> ExchangeCodeForTokenAsync(string code) {
-        using var client = new HttpClient();
-        var kvp = new[] {
-            new KeyValuePair<string, string>("grant_type", "authorization_code"),
-            new KeyValuePair<string, string>("client_id", ClientId),
-            new KeyValuePair<string, string>("code", code),
-            new KeyValuePair<string, string>("redirect_uri", RedirectUri),
-            new KeyValuePair<string, string>("client_secret",
-                "UkSXcwDw4QxDUe1lfXLFR8zCdFobvVVvB56qSKF25ylriykXSeTcWFcasXh6AtTDioajFFVo8US8uHWg0En3rYjkGltKU3vM7NQpz8oc2Auo2VLsaodCMVXH0OIj1SNp")
-        };
-
-        using var content = new FormUrlEncodedContent(kvp);
-        var response = await client.PostAsync(TokenEndpoint, content);
-
-        if (response.IsSuccessStatusCode) {
-            var jsonResult = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("\nAccess Token Response:");
-            Console.WriteLine(jsonResult);
-
-            var accessTokenResponse = JsonSerializer.Deserialize<AccessTokenResponse>(jsonResult);
-
-            return accessTokenResponse;
-        }
-
-        Console.WriteLine($"Token exchange failed: {response.StatusCode}");
-        return null;
     }
 }

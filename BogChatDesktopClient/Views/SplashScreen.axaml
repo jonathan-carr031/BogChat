@@ -19,7 +19,7 @@
         <StackPanel VerticalAlignment="Center"
                     HorizontalAlignment="Center">
             <Image Source=""></Image>
-            <TextBlock Text="{Binding StartupMessage}"
+            <TextBlock Text="{Binding StartUpMessage}"
                        Foreground="#41AB5D">
             </TextBlock>
         </StackPanel>

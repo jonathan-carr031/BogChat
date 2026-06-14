@@ -1,14 +1,14 @@
-﻿using System.Collections.ObjectModel;
-using System.Reflection;
+﻿using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using BogChatDesktopClient.Controls;
 using BogChatDesktopClient.Data;
-using BogChatDesktopClient.ViewModels;
+using BogChatDesktopClient.Models;
+using HomePageViewModel = BogChatDesktopClient.ViewModels.Pages.HomePageViewModel;
 
-namespace BogChatDesktopClient.Views;
+namespace BogChatDesktopClient.Views.Pages;
 
 public partial class HomePageView : UserControl {
     private int? _columnIndex;
@@ -17,7 +17,6 @@ public partial class HomePageView : UserControl {
     private StreamPane? _maximizedStreamPane;
     private int? _rowIndex;
     private int? _rowSpan;
-    private ObservableCollection<RoomParticipant> _users = [];
     private WindowState _windowState;
 
     public HomePageView() {
@@ -38,16 +37,33 @@ public partial class HomePageView : UserControl {
     }
 
     private void JoinRoom(object? sender, RoutedEventArgs e) {
-        if (string.IsNullOrWhiteSpace(Username.Text)) return;
-        VideoPanel.IsVisible = true;
+        if ((e.Source as Button)?.DataContext is Channel channel) {
+            switch (channel.ChannelType) {
+                case ChannelType.Voice: {
+                    ContentPanel.RowDefinitions[0].Height = new GridLength(1, GridUnitType.Star);
+                    VideoPanel.IsVisible = true;
+                    break;
+                }
+                case ChannelType.Text: {
+                    ContentPanel.RowDefinitions[1].Height = new GridLength(1, GridUnitType.Star);
+                    TextPanel.IsVisible = true;
+                    break;
+                }
+                case ChannelType.Afk: {
+                    break;
+                }
+            }
+
+            TextPanel.IsVisible = true;
+        }
     }
 
     private void LeaveRoom(object? sender, RoutedEventArgs e) {
-        // JoinRoomButton.IsVisible = true;
+        ContentPanel.RowDefinitions[0].Height = new GridLength(1, GridUnitType.Auto);
         VideoPanel.IsVisible = false;
     }
 
-    private void StreamClicked(object? sender, PointerPressedEventArgs e) {
+    private void StreamClicked(object? _, PointerPressedEventArgs e) {
         if (e.Source is Border userCard) {
             if (_maximizedStreamPane != null) {
                 ResetStreamPane();
@@ -94,13 +110,15 @@ public partial class HomePageView : UserControl {
     }
 
     private void ResetStreamPane() {
-        Grid.SetRow(_maximizedStreamPane, _rowIndex.Value);
-        Grid.SetRowSpan(_maximizedStreamPane, _rowSpan.Value);
-        Grid.SetColumn(_maximizedStreamPane, _columnIndex.Value);
-        Grid.SetColumnSpan(_maximizedStreamPane, _columnSpan.Value);
+        if (_maximizedStreamPane != null) {
+            if (_rowIndex != null) Grid.SetRow(_maximizedStreamPane, _rowIndex.Value);
+            if (_rowSpan != null) Grid.SetRowSpan(_maximizedStreamPane, _rowSpan.Value);
+            if (_columnIndex != null) Grid.SetColumn(_maximizedStreamPane, _columnIndex.Value);
+            if (_columnSpan != null) Grid.SetColumnSpan(_maximizedStreamPane, _columnSpan.Value);
 
-        _maximizedStreamPane.ZIndex = 0;
-        _maximizedStreamPane.Margin = new Thickness(12);
+            _maximizedStreamPane.ZIndex = 0;
+            _maximizedStreamPane.Margin = new Thickness(12);
+        }
 
         _maximizedStreamPane = null;
         _rowIndex = null;

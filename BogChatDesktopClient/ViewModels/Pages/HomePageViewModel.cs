@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -12,6 +13,8 @@ using BogChatDesktopClient.Messages;
 using BogChatDesktopClient.Models;
 using BogChatDesktopClient.Services;
 using BogChatDesktopClient.Services.ApiServices;
+using BogChatDesktopClient.ViewModels.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using LiveKit.Rtc;
 using NAudio.Wave;
@@ -21,33 +24,40 @@ using Brushes = Avalonia.Media.Brushes;
 using Room = LiveKit.Rtc.Room;
 using VideoStream = LiveKit.Rtc.VideoStream;
 
-namespace BogChatDesktopClient.ViewModels;
+namespace BogChatDesktopClient.ViewModels.Pages;
 
-public class HomePageViewModel : PageViewModel, IDisposable {
+public partial class HomePageViewModel : PageViewModel, IDisposable {
     private readonly ApiService _apiService;
+    private readonly IAppSessionService _appSessionService;
     private readonly LiveKitService _livekitService;
     private readonly MemoryStream _memoryStream = new();
     private readonly IMessenger _messenger;
     private readonly DispatcherTimer _timer;
 
-    private bool _isStreaming;
+    [ObservableProperty] private ViewModelBase? _currentTextChannel;
+
+    [ObservableProperty] private bool _isStreaming;
+    private RoomParticipant? _localRoomParticipant;
 
     private RoomParticipant? _maximizedParticipant;
     private Room? _room;
     private Bitmap? _streamPreview;
-    private string? _username;
-    private RoomParticipant? LocalRoomParticipant;
 
+    [ObservableProperty] private string? _username;
 
     public HomePageViewModel() {
-        Username = "Test UserName";
+        //This is for the designer
     }
 
-    public HomePageViewModel(LiveKitService livekitService, IMessenger messenger, ApiService apiService) {
-        PageName = PageNames.HomePage;
+    public HomePageViewModel(LiveKitService livekitService, IMessenger messenger, ApiService apiService,
+        IAppSessionService appSessionService) {
+        PageName = PageName.HomePage;
         _livekitService = livekitService;
         _messenger = messenger;
         _apiService = apiService;
+        _appSessionService = appSessionService;
+
+        Username = _appSessionService.CurrentUser.Username;
         _livekitService.OnFrameCaptured += OnFrameCaptured;
 
         RoomParticipants = [];
@@ -59,7 +69,7 @@ public class HomePageViewModel : PageViewModel, IDisposable {
         _timer = new DispatcherTimer {
             Interval = TimeSpan.FromSeconds(5)
         };
-        _timer.Tick += (sender, e) => { CheckRoomParticipants(); };
+        _timer.Tick += (_, _) => { CheckRoomParticipants(); };
         _timer.Start();
 
         _ = GetChannels();
@@ -78,9 +88,12 @@ public class HomePageViewModel : PageViewModel, IDisposable {
 
 
     public ObservableCollection<StreamableItem> StreamableItems { get; set; }
-    public ObservableCollection<RoomParticipant> RoomParticipants { get; set; } = [];
+    public ObservableCollection<RoomParticipant> RoomParticipants { get; set; }
     public ObservableCollection<string?> RoomPeople { get; set; } = [];
     public ObservableCollection<Channel> Channels { get; set; } = [];
+
+    public ObservableCollection<string?> ChannelMessages { get; set; } = [];
+    private Dictionary<Guid, TextChannelViewModel> TextChannels { get; set; } = [];
 
     public Bitmap? StreamPreview {
         get => _streamPreview;
@@ -90,28 +103,12 @@ public class HomePageViewModel : PageViewModel, IDisposable {
         }
     }
 
-    public string? Username {
-        get => _username;
-        set {
-            _username = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public bool IsStreaming {
-        get => _isStreaming;
-        set {
-            _isStreaming = value;
-            OnPropertyChanged();
-        }
-    }
-
 
     public void Dispose() {
         _timer.Stop();
     }
 
-    public async Task GetChannels() {
+    private async Task GetChannels() {
         var channels = (await _apiService.GetChannels()).OrderBy(channel => channel.ChannelType)
             .ThenBy(channel => channel.Name);
 
@@ -120,7 +117,7 @@ public class HomePageViewModel : PageViewModel, IDisposable {
         }
     }
 
-    public async Task MaximizePane(RoomParticipant? roomParticipant) {
+    public void MaximizePane(RoomParticipant? roomParticipant) {
         MaximizedParticipant = roomParticipant;
     }
 
@@ -141,12 +138,12 @@ public class HomePageViewModel : PageViewModel, IDisposable {
                 _ = GetRoomParticipants(channel);
                 await _livekitService.ConnectMicrophone();
 
-                LocalRoomParticipant = new RoomParticipant {
-                    Username = Username,
-                    UserId = Username
+                _localRoomParticipant = new RoomParticipant {
+                    Username = _appSessionService.CurrentUser.Username,
+                    UserId = _appSessionService.CurrentUser.Username
                 };
 
-                RoomParticipants.Add(LocalRoomParticipant);
+                RoomParticipants.Add(_localRoomParticipant);
 
                 break;
             }
@@ -155,6 +152,17 @@ public class HomePageViewModel : PageViewModel, IDisposable {
                 break;
             }
             case ChannelType.Text: {
+                Console.WriteLine($"Opening Text Channel with ID {channel.Id}");
+                if (TextChannels.TryGetValue(channel.Id, out var textChannelViewModel)) {
+                    Console.WriteLine("TextViewModel Found in Dictionary");
+                    CurrentTextChannel = textChannelViewModel;
+                    break;
+                }
+
+                var textChannel = new TextChannelViewModel(_apiService, channel, _appSessionService);
+                TextChannels.Add(channel.Id, textChannel);
+                Console.WriteLine($"Opening Text Channel with ID {channel.Id}");
+                CurrentTextChannel = textChannel;
                 break;
             }
             default:
@@ -230,7 +238,7 @@ public class HomePageViewModel : PageViewModel, IDisposable {
         IsStreaming = false;
     }
 
-    public async Task StreamableItemClickEvent(StreamableItem item) {
+    public void StreamableItemClickEvent(StreamableItem item) {
         Console.WriteLine($"{item.ProcessId} - {item.WindowTitle} clicked...");
 
         if (item.ProcessId > 0) {
@@ -241,8 +249,8 @@ public class HomePageViewModel : PageViewModel, IDisposable {
 
     private void OnFrameCaptured(VideoFrame videoFrame) {
         var videoFrameBitmap = ImageProcessor.ConvertToBitmap(videoFrame);
-        if (LocalRoomParticipant != null) {
-            LocalRoomParticipant.VideoStream = videoFrameBitmap;
+        if (_localRoomParticipant != null) {
+            _localRoomParticipant.VideoStream = videoFrameBitmap;
         }
     }
 
@@ -306,11 +314,11 @@ public class HomePageViewModel : PageViewModel, IDisposable {
     }
 
     public void MuteVoice() {
-        _livekitService.ToggleMute();
+        _ = _livekitService.ToggleMute();
     }
 
     public void UnmuteVoice() {
-        _livekitService.ToggleMute();
+        _ = _livekitService.ToggleMute();
     }
 
     public void Logout() {

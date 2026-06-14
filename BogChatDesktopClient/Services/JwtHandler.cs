@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using BogChatDesktopClient.Models;
 
 namespace BogChatDesktopClient.Services;
 
@@ -23,12 +24,24 @@ public static class JwtHandler {
         return usernameClaim?.Value;
     }
 
+    public static User? ExtractUser(JwtSecurityToken token) {
+        var userIdClaim = token.Claims.FirstOrDefault(claim => claim.Type == "sub");
+        var usernameClaim = token.Claims.FirstOrDefault(claim => claim.Type == "preferred_username");
+        var email = token.Claims.FirstOrDefault(claim => claim.Type == "email");
+
+        if (userIdClaim == null || usernameClaim == null) return null;
+
+        return new User {
+            Id = Guid.Parse(userIdClaim.Value),
+            Username = usernameClaim.Value,
+            Email = email?.Value,
+            DisplayName = usernameClaim?.Value
+        };
+    }
+
     public static bool IsTokenExpired(string token) {
         var handler = new JwtSecurityTokenHandler();
         var jsonToken = handler.ReadToken(token);
-
-        Console.WriteLine($"Token Expiry Time: {jsonToken.ValidTo}");
-        Console.WriteLine($"Current Time: {DateTime.UtcNow}");
 
         return DateTime.UtcNow > jsonToken.ValidTo;
     }

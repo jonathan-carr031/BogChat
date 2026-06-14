@@ -5,17 +5,19 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Metadata;
+using BogChatDesktopClient.Data;
 using BogChatDesktopClient.Extensions;
 using BogChatDesktopClient.ViewModels;
 using BogChatDesktopClient.Views;
 using Microsoft.Extensions.DependencyInjection;
+using SplashScreen = BogChatDesktopClient.Views.SplashScreen;
 
 [assembly: XmlnsDefinition("https://github.com/avaloniaui", "BogChatDesktopClient.Controls")]
 
 namespace BogChatDesktopClient;
 
 [SupportedOSPlatform("windows")]
-public class App : Application {
+public class App() : Application {
     public override void Initialize() {
         AvaloniaXamlLoader.Load(this);
     }
@@ -26,16 +28,16 @@ public class App : Application {
         var provider = services.BuildServiceProvider();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
-            var splashScreenViewModel = new SplashScreenViewModel();
+            var splashScreenViewModel = provider.GetRequiredService<SplashScreenViewModel>();
             var splashScreen = new SplashScreen {
                 DataContext = splashScreenViewModel
             };
 
             desktop.MainWindow = splashScreen;
+            PageName startingPage;
 
             try {
-                splashScreenViewModel.StartupMessage = "Checking For Updates...";
-                await splashScreenViewModel.CheckForUpdates();
+                startingPage = await splashScreenViewModel.InitializeApplication();
             }
             catch (TaskCanceledException) {
                 splashScreen.Close();
@@ -43,6 +45,7 @@ public class App : Application {
             }
 
             var mainWindowViewModel = provider.GetRequiredService<MainWindowViewModel>();
+            mainWindowViewModel.SetCurrentPage(startingPage);
 
             var mainWindow = new MainWindow {
                 DataContext = mainWindowViewModel

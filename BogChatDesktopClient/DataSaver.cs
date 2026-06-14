@@ -21,7 +21,6 @@ public static class DataSaver {
 
     public static void SaveAccessToken(AccessTokenResponse accessToken) {
         var vault = new PasswordVault();
-        Console.WriteLine(JsonSerializer.Serialize(accessToken));
         var credentials =
             new PasswordCredential(ApplicationResourceName, "CurrentUser", JsonSerializer.Serialize(accessToken));
 
@@ -47,7 +46,6 @@ public static class DataSaver {
         var accessToken = accessTokenResponse?.AccessToken;
         if (accessToken == null) return null;
         var token = JwtHandler.Decode(accessToken);
-        Console.WriteLine(token);
         if (token == null) return null;
         var username = JwtHandler.ExtractUsername(token);
         return string.IsNullOrEmpty(username) ? null : username;

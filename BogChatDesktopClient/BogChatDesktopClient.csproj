@@ -38,22 +38,46 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8"/>
         <PackageReference Include="NAudio" Version="2.3.0"/>
         <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0"/>
+        <PackageReference Include="System.Net.ServerSentEvents" Version="10.0.9"/>
         <PackageReference Include="Updatum" Version="1.3.7"/>
     </ItemGroup>
 
     <ItemGroup>
         <Folder Include="Assets\Audio\"/>
         <Folder Include="Views\Dialogs\"/>
-        <Folder Include="Views\Pages\"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Update="Controls\UserCard.axaml.cs">
+        <Compile Update="Views\MainWindow.axaml.cs">
+            <DependentUpon>MainWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Controls\StreamPane.axaml.cs">
+            <DependentUpon>StreamPane.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Controls\UserCard.axaml.cs">
             <DependentUpon>UserCard.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
-        <Compile Update="Views\MainWindow.axaml.cs">
-            <DependentUpon>MainWindow.axaml</DependentUpon>
+        <Compile Update="Views\SplashScreen.axaml.cs">
+            <DependentUpon>SplashScreen.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Controls\TextChannelView.axaml.cs">
+            <DependentUpon>TextChannelView.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Pages\HomePageView.axaml.cs">
+            <DependentUpon>HomePageView.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Pages\LoginPageView.axaml.cs">
+            <DependentUpon>LoginPageView.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Controls\VideoGridTest.axaml.cs">
+            <DependentUpon>VideoGridTest.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
     </ItemGroup>

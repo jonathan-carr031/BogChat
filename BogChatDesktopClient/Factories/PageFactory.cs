@@ -1,9 +1,9 @@
 ﻿using System;
 using BogChatDesktopClient.Data;
-using BogChatDesktopClient.ViewModels;
+using PageViewModel = BogChatDesktopClient.ViewModels.Pages.PageViewModel;
 
 namespace BogChatDesktopClient.Factories;
 
-public class PageFactory(Func<PageNames, PageViewModel> pageViewModelFactory) {
-    public PageViewModel GetPageViewModel(PageNames pageName) => pageViewModelFactory.Invoke(pageName);
+public class PageFactory(Func<PageName, PageViewModel> pageViewModelFactory) {
+    public PageViewModel GetPageViewModel(PageName pageName) => pageViewModelFactory.Invoke(pageName);
 }

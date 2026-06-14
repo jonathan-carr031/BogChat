@@ -1,0 +1,75 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:controls="clr-namespace:BogChatDesktopClient.ViewModels.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="BogChatDesktopClient.Views.Controls.TextChannelView"
+             x:DataType="controls:TextChannelViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.message">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Background" Value="#880000" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="MaxWidth" Value="400" />
+        </Style>
+        <Style Selector="Border.message.self">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Background" Value="#008800" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Name="TextPanel"
+          Background="gray"
+          ShowGridLines="True"
+          RowDefinitions="*, Auto"
+          VerticalAlignment="Stretch">
+
+        <TextBlock Grid.Row="0"
+                   ZIndex="1"
+                   Margin="12"
+                   Text="{Binding ChannelName }"
+                   FontSize="24"
+                   Foreground="#88000000" />
+
+        <ScrollViewer Name="TextScrollViewer" Grid.Row="0" Margin="12"
+                      VerticalScrollBarVisibility="Hidden">
+            <ItemsRepeater ItemsSource="{Binding Messages}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Orientation="Vertical" Spacing="10" />
+                </ItemsRepeater.Layout>
+
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate>
+                        <Border Classes="message" Classes.self="{Binding IsSelf}">
+                            <TextBlock Text="{Binding Message}" TextWrapping="WrapWithOverflow" />
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
+
+        <Border Grid.Row="1"
+                Background="#1f1f1f">
+            <Grid ColumnDefinitions="*, Auto">
+                <TextBox Grid.Column="0"
+                         HorizontalAlignment="Stretch"
+                         Background="Transparent"
+                         Padding="24"
+                         Text="{Binding MessageText, Mode=TwoWay}"
+                         PlaceholderText="Message" />
+                <Button Grid.Column="1" Padding="24"
+                        Background="Transparent"
+                        Command="{Binding SendMessageCommand }">
+                    <avalonia:FluentIcon Icon="Send" IconVariant="Regular" IconSize="Size32" />
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+
+</UserControl>
