@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:avalonia="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              xmlns:controls="clr-namespace:BogChatDesktopClient.ViewModels.Controls"
+             xmlns:controls1="clr-namespace:BogChatDesktopClient.Views.Controls"
+             xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="BogChatDesktopClient.Views.Controls.TextChannelView"
              x:DataType="controls:TextChannelViewModel">
@@ -11,33 +13,33 @@
     <UserControl.Styles>
         <Style Selector="Border.message">
             <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Background" Value="#880000" />
             <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Background" Value="#880000" />
             <Setter Property="MaxWidth" Value="400" />
         </Style>
+
         <Style Selector="Border.message.self">
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="12" />
             <Setter Property="HorizontalAlignment" Value="Right" />
             <Setter Property="Background" Value="#008800" />
+            <Setter Property="MaxWidth" Value="400" />
         </Style>
     </UserControl.Styles>
 
     <Grid Name="TextPanel"
           Background="gray"
-          ShowGridLines="True"
-          RowDefinitions="*, Auto"
+          RowDefinitions="*, Auto, Auto"
           VerticalAlignment="Stretch">
 
         <TextBlock Grid.Row="0"
                    ZIndex="1"
                    Margin="12"
                    Text="{Binding ChannelName }"
+                   TextWrapping="WrapWithOverflow"
                    FontSize="24"
-                   Foreground="#88000000" />
+                   Foreground="#BB000000" />
 
-        <ScrollViewer Name="TextScrollViewer" Grid.Row="0" Margin="12"
+        <!-- Chat Messages -->
+        <ScrollViewer Name="TextScrollViewer" Grid.Row="0" Margin="12 48 12 12"
                       VerticalScrollBarVisibility="Hidden">
             <ItemsRepeater ItemsSource="{Binding Messages}">
                 <ItemsRepeater.Layout>
@@ -46,29 +48,101 @@
 
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate>
-                        <Border Classes="message" Classes.self="{Binding IsSelf}">
-                            <TextBlock Text="{Binding Message}" TextWrapping="WrapWithOverflow" />
+                        <Border Classes="message"
+                                Classes.self="{Binding IsSelf}">
+                            <controls1:TextMessage ChannelMessage="{Binding}" />
                         </Border>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
         </ScrollViewer>
 
+        <!-- Message Section -->
         <Border Grid.Row="1"
                 Background="#1f1f1f">
-            <Grid ColumnDefinitions="*, Auto">
-                <TextBox Grid.Column="0"
+            <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                <Border Grid.Column="0"
+                        MaxWidth="175"
+                        MaxHeight="175"
+                        Name="GifToSendPreview"
+                        IsVisible="{Binding HasGifPreview, Mode=TwoWay}">
+                    <Panel>
+                        <Image anim:ImageBehavior.AnimatedSource="{Binding GifToSend?.Images?.Downsized.Url}" />
+                        <Button Margin="6"
+                                VerticalAlignment="Top"
+                                HorizontalAlignment="Right"
+                                Command="{Binding RemoveGifCommand}">
+                            <avalonia:FluentIcon Icon="Delete" IconVariant="Regular" IconSize="Size12" />
+                        </Button>
+                    </Panel>
+                </Border>
+                <TextBox Grid.Column="1"
                          HorizontalAlignment="Stretch"
                          Background="Transparent"
                          Padding="24"
                          Text="{Binding MessageText, Mode=TwoWay}"
                          PlaceholderText="Message" />
-                <Button Grid.Column="1" Padding="24"
+                <Button Grid.Column="2" Padding="24"
+                        Background="Transparent"
+                        Click="GifButton_OnClick">
+                    <avalonia:FluentIcon Icon="Gif" IconVariant="Regular" />
+                </Button>
+                <Button Grid.Column="3" Padding="24"
                         Background="Transparent"
                         Command="{Binding SendMessageCommand }">
                     <avalonia:FluentIcon Icon="Send" IconVariant="Regular" IconSize="Size32" />
                 </Button>
             </Grid>
+        </Border>
+
+        <!--Gif Search-->
+        <Border Grid.Row="2" Name="GifSearchSection" IsVisible="{Binding GifSectionOpen, Mode=TwoWay}">
+            <Grid RowDefinitions="Auto, *">
+                <TextBox Grid.Row="0"
+                         Name="GifSearchText"
+                         Text="{Binding GifSearchTerm, Mode=TwoWay}"
+                         Padding="12"
+                         KeyUp="GifSearchText_OnKeyUp">
+                </TextBox>
+                <ScrollViewer Grid.Row="1"
+                              HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled"
+                              PointerWheelChanged="OnPointerWheelChanged">
+                    <ItemsRepeater ItemsSource="{Binding GifDataList}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Orientation="Horizontal" Spacing="10" />
+                        </ItemsRepeater.Layout>
+
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#ababab"
+                                        MaxWidth="200"
+                                        MaxHeight="200"
+                                        Margin="6"
+                                        CornerRadius="6"
+                                        ClipToBounds="True"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center">
+                                    <Button
+                                        Command="{Binding $parent[ItemsRepeater].((controls:TextChannelViewModel)DataContext)?.AddGifToMessage}"
+                                        CommandParameter="{Binding }">
+                                        <Panel>
+                                            <TextBlock Text="{Binding Title}"
+                                                       TextWrapping="WrapWithOverflow"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center" />
+
+                                            <Image anim:ImageBehavior.AnimatedSource="{Binding Images?.Downsized.Url}"
+                                                   anim:ImageBehavior.RepeatBehavior="3x" />
+                                        </Panel>
+                                    </Button>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </ScrollViewer>
+            </Grid>
+
         </Border>
     </Grid>
 

@@ -23,7 +23,7 @@
                        Stretch="Fill"
                        Source="{Binding VideoStream}" />
 
-                <TextBlock Text="{Binding Username}" Margin="20" Foreground="#dedede"></TextBlock>
+                <TextBlock Text="{Binding Username}" Margin="20" Foreground="#dedede" />
             </Panel>
         </Border>
     </Border>

@@ -13,7 +13,7 @@
     </Design.DataContext>
 
     <!-- MainPage -->
-    <Grid Name="MainGrid" ColumnDefinitions="Auto, *, Auto">
+    <Grid Name="MainGrid" ColumnDefinitions="Auto, *, Auto" Background="{DynamicResource PrimaryBackground}">
         <!-- Maximized StreamPane Overlay-->
         <Panel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" ZIndex="1"
                IsVisible="{Binding HasMaximizedParticipant}"

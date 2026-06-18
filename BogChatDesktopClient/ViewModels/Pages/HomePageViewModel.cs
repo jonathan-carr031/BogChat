@@ -29,12 +29,13 @@ namespace BogChatDesktopClient.ViewModels.Pages;
 public partial class HomePageViewModel : PageViewModel, IDisposable {
     private readonly ApiService _apiService;
     private readonly IAppSessionService _appSessionService;
+    private readonly GifService _gifService;
     private readonly LiveKitService _livekitService;
     private readonly MemoryStream _memoryStream = new();
     private readonly IMessenger _messenger;
     private readonly DispatcherTimer _timer;
 
-    [ObservableProperty] private ViewModelBase? _currentTextChannel;
+    [ObservableProperty] private TextChannelViewModel? _currentTextChannel;
 
     [ObservableProperty] private bool _isStreaming;
     private RoomParticipant? _localRoomParticipant;
@@ -45,17 +46,16 @@ public partial class HomePageViewModel : PageViewModel, IDisposable {
 
     [ObservableProperty] private string? _username;
 
-    public HomePageViewModel() {
-        //This is for the designer
-    }
+    public HomePageViewModel() { }
 
     public HomePageViewModel(LiveKitService livekitService, IMessenger messenger, ApiService apiService,
-        IAppSessionService appSessionService) {
+        IAppSessionService appSessionService, GifService gifService) {
         PageName = PageName.HomePage;
         _livekitService = livekitService;
         _messenger = messenger;
         _apiService = apiService;
         _appSessionService = appSessionService;
+        _gifService = gifService;
 
         Username = _appSessionService.CurrentUser.Username;
         _livekitService.OnFrameCaptured += OnFrameCaptured;
@@ -153,15 +153,20 @@ public partial class HomePageViewModel : PageViewModel, IDisposable {
             }
             case ChannelType.Text: {
                 Console.WriteLine($"Opening Text Channel with ID {channel.Id}");
+
+                if (channel.Id == CurrentTextChannel?.ChannelId) {
+                    Console.WriteLine("This is the same channel; Don't do anything");
+                    return;
+                }
+
                 if (TextChannels.TryGetValue(channel.Id, out var textChannelViewModel)) {
                     Console.WriteLine("TextViewModel Found in Dictionary");
                     CurrentTextChannel = textChannelViewModel;
                     break;
                 }
 
-                var textChannel = new TextChannelViewModel(_apiService, channel, _appSessionService);
+                var textChannel = new TextChannelViewModel(_apiService, channel, _appSessionService, _gifService);
                 TextChannels.Add(channel.Id, textChannel);
-                Console.WriteLine($"Opening Text Channel with ID {channel.Id}");
                 CurrentTextChannel = textChannel;
                 break;
             }

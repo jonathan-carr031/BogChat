@@ -8,5 +8,5 @@ profile:
   name: qodana.recommended
 include:
   - name: CheckDependencyLicenses
-excludes:
+exclude:
   - name: XAMLErrors

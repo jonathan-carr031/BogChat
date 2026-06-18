@@ -9,7 +9,20 @@
         <bogChatDesktopClient:ViewLocator />
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Resources/Colors.axaml" />
+                <!-- <ResourceInclude Source="/Resources/Sizes.axaml" /> -->
+            </ResourceDictionary.MergedDictionaries>
+            <!-- Additional inline resources -->
+            <x:String x:Key="AppName">My Application</x:String>
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
+
+        <StyleInclude Source="avares://BogChatDesktopClient/Styles/AppStyles.axaml" />
     </Application.Styles>
 </Application>

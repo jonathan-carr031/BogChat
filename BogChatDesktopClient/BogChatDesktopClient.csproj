@@ -19,6 +19,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="AnimatedImage.Avalonia" Version="2.1.4"/>
         <PackageReference Include="AuthentikSharp" Version="1.0.3"/>
         <PackageReference Include="Avalonia" Version="12.0.1"/>
         <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="12.0.0"/>

@@ -1,0 +1,71 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:BogChatDesktopClient.Models"
+             xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="BogChatDesktopClient.Views.Controls.TextMessage"
+             x:DataType="models:ChannelMessage">
+
+    <Design.DataContext>
+        <models:ChannelMessage />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Border.message">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Background" Value="#880000" />
+            <Setter Property="MaxWidth" Value="400" />
+        </Style>
+        <Style Selector="TextBlock.message-text">
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+        <Style Selector="TextBlock.message-time">
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+
+        <Style Selector="Border.message.self">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Background" Value="#008800" />
+            <Setter Property="MaxWidth" Value="400" />
+        </Style>
+        <Style Selector="TextBlock.message-text.self">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+        <Style Selector="TextBlock.message-time.self">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Classes="message"
+            Classes.self="{Binding IsSelf}"
+            CornerRadius="12">
+        <Panel>
+            <StackPanel Margin="6 30" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="10">
+                <Image anim:ImageBehavior.AnimatedSource="{Binding SharedGif}"
+                       IsVisible="{Binding HasGif}" />
+                <TextBlock Padding="6 0"
+                           FontSize="16"
+                           TextWrapping="WrapWithOverflow"
+                           IsVisible="{Binding HasText}"
+                           Text="{Binding MessageText}" />
+            </StackPanel>
+            <TextBlock Classes="message-text"
+                       Classes.self="{Binding IsSelf}"
+                       Margin="6 6" VerticalAlignment="Top"
+                       FontSize="12"
+                       FontWeight="Bold"
+                       Text="{Binding Username}" />
+
+            <TextBlock Classes="message-time"
+                       Classes.self="{Binding IsSelf}"
+                       Margin="6 6" VerticalAlignment="Bottom"
+                       FontSize="12"
+                       FontStyle="Italic"
+                       Text="{Binding LocalCreatedAt, StringFormat='{}{0:MM/dd/yyyy hh:mm tt}'}" />
+        </Panel>
+    </Border>
+
+</UserControl>

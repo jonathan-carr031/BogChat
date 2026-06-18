@@ -66,6 +66,7 @@ public static class ServiceCollectionExtensions {
         services.AddTransient<ApiService>();
         services.AddSingleton<IAppSessionService, AppSessionService>();
         services.AddSingleton<OAuthService>();
+        services.AddTransient<GifService>();
 
         return services;
     }
